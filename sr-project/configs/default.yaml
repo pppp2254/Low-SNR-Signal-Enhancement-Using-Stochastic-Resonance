@@ -1,0 +1,76 @@
+# Baseline parameters. Source: PLAN.md section 2.2.
+# Never edit a value to make a result look better; log any change with a reason
+# in PROGRESS.md (PLAN.md section 3).
+
+system:
+  a: 1.0            # double-well parameter
+  b: 1.0            # quartic parameter
+  # a = b = 1  ->  wells at +-1, barrier dU = 0.25, A_c ~ 0.385
+
+signal:
+  A: 0.3            # 78% of A_c, sub-threshold
+  f0: 0.01          # period T = 100 (model time units)
+
+solver:
+  dt: 0.01          # Euler-Maruyama step
+  decimate: 10      # record every 10th step -> fs = 10
+  fs: 10            # derived: 1 / (dt * decimate); asserted in code
+  n_periods: 128    # recorded periods (exact integer -> f0 on an FFT bin)
+  discard_periods: 10
+  method: em        # em | heun
+
+ensemble:
+  n_trials: 20      # 50 for the final E3 figure
+  n_trials_final: 50
+
+noise:
+  # D sweep: 40 log-spaced values from 0.01 to 2
+  D_min: 0.01
+  D_max: 2.0
+  n_D: 40
+
+metrics:
+  n_side: 25        # background = median of bins f0 +- guard..n_side
+  guard: 1
+  n_boot: 200
+  pfa: 0.05
+
+seeds:
+  base: 20260918
+  e1: 1001
+  e2: 1002
+  e3: 1003
+  e3_dt_half: 1004
+  e3_heun: 1005
+  e4: 1006
+  e5: 1007
+  e6: 1008
+  e7: 1009
+  e8: 1010
+  e9: 1011
+  e10: 1012
+
+sweeps:
+  # PLAN.md section 2.2 "Sweep range" column
+  a: [0.2, 3.0]                       # parameter-tuned SR (E5), b = a
+  A: [0.1, 0.2, 0.3]                  # E4
+  f0: [0.005, 0.01, 0.02, 0.05]       # E4
+  dt_check: 0.005                     # numerical check: halved step
+
+experiments:
+  e1:
+    D: [0.02, 0.12, 1.0]              # too little / optimal / too much
+  e2:
+    theta: 1.0
+    A: 0.7                            # A < theta
+    sigma_min: 0.05
+    sigma_max: 3.0
+    n_sigma: 40
+  e5:
+    D_in: [0.05, 0.1, 0.2]            # fixed input noise, input SNR near -15 dB
+  e6:
+    n_periods: 16                     # short records make detection hard
+    n_runs: 500                       # per hypothesis
+  e10:
+    darken: 0.12                      # scale brightness to ~10-15%
+    n_frames: 50                      # averaged binary frames, approach A
