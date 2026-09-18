@@ -1,0 +1,12 @@
+{
+  "name": "sr-dashboard",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run server.ts",
+    "data": "cd .. && .venv/bin/python web/export_data.py"
+  },
+  "dependencies": {
+    "elysia": "^1.4.30"
+  }
+}

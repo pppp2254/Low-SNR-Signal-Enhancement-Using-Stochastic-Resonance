@@ -63,12 +63,17 @@ def _band_periodograms(x, fs, f0, n_side):
     return out.reshape(x.shape[:-1] + (2 * n_side + 1,))
 
 
-def _snr_from_band(band, n_side, guard):
+def _snr_from_band(band, n_side, guard, on_degenerate="raise"):
     """Average the periodograms, then take the ratio.
 
     Averaging first is what stabilises the background (PLAN.md 9). A single
     trial's periodogram is exponential, whose median sits at 0.693 of the mean
     and biases N low by 1.6 dB; by 20 trials that is under 0.1 dB.
+
+    on_degenerate says what to do when the background is zero. "raise" is for
+    the point estimate, where a constant record means something is wrong.
+    "floor" is for bootstrap draws, where resampling only silent trials is an
+    expected outcome near the bottom of a detector sweep, not a bug.
     """
     p = band.mean(axis=-2)
     offsets = np.arange(-n_side, n_side + 1)
@@ -77,13 +82,18 @@ def _snr_from_band(band, n_side, guard):
         raise ValueError(f"guard={guard} leaves no background bins at n_side={n_side}")
 
     N = np.median(p[..., side], axis=-1)
-    if np.any(N <= 0):
-        raise ValueError(
-            "background power is zero, so SNR is undefined; the record is constant "
-            "over the analysis band (an all-zero detector output does this)"
-        )
+    degenerate = N <= 0
+    if np.any(degenerate):
+        if on_degenerate == "raise":
+            raise ValueError(
+                "background power is zero, so SNR is undefined; the record is constant "
+                "over the analysis band (an all-zero detector output does this)"
+            )
+        N = np.where(degenerate, 1.0, N)
+
     S = np.maximum(p[..., n_side] - N, N * 10 ** (_SNR_FLOOR_DB / 10))
-    return 10 * np.log10(S / N), S, N
+    snr = 10 * np.log10(S / N)
+    return np.where(degenerate, _SNR_FLOOR_DB, snr), S, N
 
 
 def snr_db(x, fs, f0, n_side=25, guard=1):
@@ -116,7 +126,7 @@ def bootstrap_snr(x, fs, f0, n_side=25, guard=1, n_boot=200, seed=0):
     draws = np.empty((n_boot,) + np.shape(snr))
     for i in range(n_boot):
         idx = rng.integers(0, n_trials, size=n_trials)
-        draws[i] = _snr_from_band(band[..., idx, :], n_side, guard)[0]
+        draws[i] = _snr_from_band(band[..., idx, :], n_side, guard, "floor")[0]
     lo, hi = np.percentile(draws, [16, 84], axis=0)
     return snr, lo, hi
 

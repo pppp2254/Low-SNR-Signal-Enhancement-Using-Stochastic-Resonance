@@ -63,9 +63,24 @@ python make_all.py
 
 ## Status
 
-WP0 (scaffold), WP1 (core library) and WP2 (metrics) done: `signals`,
-`bistable`, `threshold`, `theory` and `metrics` are implemented and tested
-(39 tests). `sweep`, `plotting` and `image_sr` are still docstring stubs, and
-no experiment has been run. WP3 is next: E1, E2, E3 and the two numerical
-checks. See `PROGRESS.md` for open issues, including an unverified theory
-prefactor and a memory ceiling on the full ensemble.
+WP0 to WP3 done. `signals`, `bistable`, `threshold`, `theory`, `metrics`,
+`sweep` and `plotting` are implemented and tested (44 tests). E1, E2 and E3
+have run; E3 puts the SNR peak at D = 0.1153 against a theoretical 0.125, and
+the halved-step and Heun checks agree to within 0.7 dB.
+
+Not started: E4 to E10, the report and the notebook (its experiment cells are
+still stubs). `image_sr` is a docstring stub. See `PROGRESS.md` for open
+issues, including an unverified theory prefactor.
+
+## Dashboard
+
+```bash
+cd web && bun install && bun run dev
+```
+
+Serves a raw results readout on port 3100. Rebuild its data after any
+experiment reruns:
+
+```bash
+.venv/bin/python web/export_data.py
+```

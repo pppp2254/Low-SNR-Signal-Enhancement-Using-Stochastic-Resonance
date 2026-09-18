@@ -1,0 +1,19 @@
+{
+  "A": 0.3,
+  "D": [
+    0.02,
+    0.12,
+    1.0
+  ],
+  "a": 1.0,
+  "b": 1.0,
+  "decimate": 10,
+  "discard_periods": 10,
+  "dt": 0.01,
+  "f0": 0.01,
+  "method": "em",
+  "n_periods": 128,
+  "n_trials": 20,
+  "seed": 1001,
+  "show_periods": 6
+}

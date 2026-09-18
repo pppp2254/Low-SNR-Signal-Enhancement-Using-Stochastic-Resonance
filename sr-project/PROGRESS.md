@@ -184,3 +184,99 @@ test, not bugs in the estimator, and both are now documented in `xcorr_peak`:
 3. Still open from WP1: the `two_state_snr` prefactor (pi versus pi/2) is
    unverified against Gammaitoni et al. (1998), and the bandwidth conversion
    between `two_state_snr` and `snr_db` is deferred to WP3.
+
+## 2026-09-18 - WP3: headline experiments
+
+**Done.** Added `sweep.py` (chunked sweeps with result caching) and
+`plotting.py` (shared style), then `experiments/e1_regimes.py`,
+`e2_threshold.py` and `e3_snr_vs_noise.py`. Moved the theory-to-per-bin
+conversion into `srlab.theory.two_state_snr_db` so the dashboard exporter and
+the experiment share one implementation. Added `tests/test_sweep.py`.
+Figures: `e1_regimes`, `e2_threshold`, `e3_snr_vs_noise`,
+`e3_numerical_checks`, each as 300 dpi png and pdf.
+
+**Results.**
+
+E1, three regimes at D = 0.02, 0.12, 1.0: SNR 18.88, 28.11, 20.68 dB. The f0
+bin stands 34, 37 and 21 dB over its local background. At D = 0.02 the particle
+hops rarely and out of step; at D = 0.12 it tracks the drive; at D = 1.0 the
+hopping is faster than the signal.
+
+E2, threshold detector, A = 0.7 below theta = 1: peak at sigma = 0.621,
+39.50 dB, from a floor at the 4 lowest sigma values (up to 0.069) where the
+detector never fires. Clear rise, peak and fall, with no dynamics involved.
+
+E3, the headline: **measured peak at D = 0.1153, SNR 28.19 dB
+[28.04, 28.34]**, against the theoretical dU/2 = 0.125. That is a 7.7% error,
+inside PLAN.md's "about 30%" criterion. The error is also smaller than the
+sweep can resolve: the 40-point log grid steps 14.6% per point, and 0.1153 and
+0.1321 are the two grid points bracketing 0.125, so the measured peak is the
+nearest resolvable value. Curve runs 20.7 dB at D = 0.01, down to 18.1 dB at
+D = 0.017, up to the peak, then down to 18.1 dB at D = 2.
+
+Numerical checks: dt halved and Heun both put the peak at the **same**
+D = 0.1153. Maximum deviation from the baseline curve is 0.69 dB (dt halved,
+mean 0.19 dB) and 0.66 dB (Heun, mean 0.23 dB). Bootstrap bands overlap at
+37/40 and 33/40 D values; since the bands are 16-84 percentiles, two agreeing
+independent estimates fail to overlap about 16% of the time by chance, so
+3/40 and 7/40 non-overlaps are what agreement looks like, not disagreement.
+The bands are only about +-0.15 dB wide, which is why overlap counting is a
+weak test here and the 0.7 dB maximum deviation is the better number.
+
+**Theory comparison.** The theory curve tracks the simulation closely from
+D = 0.05 upward and peaks 30.49 dB against the measured 28.19 dB, an offset of
+-2.30 dB. Note that offset is smaller than the pi versus pi/2 prefactor
+question from WP1: with pi/2 the theory peak would be 27.5 dB, 0.7 dB *below*
+the measurement. Neither convention is excluded by this data, so the prefactor
+still has to come from the paper.
+
+Below D = 0.05 theory and simulation diverge completely: theory falls past
+-50 dB while the simulation flattens near 18 to 20 dB. That is expected and
+worth stating in the report. The two-state model describes only well-to-well
+hopping, and at low D there is almost no hopping; what the simulation still
+measures at f0 is the intra-well response to the drive, which the two-state
+model does not represent at all.
+
+**Dashboard.** Added `web/` with an Elysia server (`server.ts`, port 3100),
+`export_data.py` (results to `web/data.js`) and `index.html`. Raw readout:
+measured values strip, E3 with theory overlay, E2, the three solver variants,
+E1's six panels, and the 40-row E3 table. Times New Roman only, cool slate
+ground in light and dark, no rounded corners, shadows, gradients or icons.
+Run with `bun run web/server.ts`, or `bun run dev` from `web/`. Also published
+as an artifact. `web/node_modules/` is gitignored; `.claude/launch.json` in the
+primary working directory gained an `sr-dashboard` entry on port 3100 (3000 was
+already taken).
+
+**Checked.** `pytest` passes 44 tests in 67 s. The E3 sweep peaked at 370 MB
+RSS against a roughly 1 GB budget, so the WP1 memory ceiling is handled:
+`chunked_snr` reduces each chunk of raw traces to a band periodogram and
+releases it. `test_sweep.py` asserts that chunking one value at a time and all
+at once give identical SNR.
+
+**Three bugs found and fixed.**
+
+1. E1's f0 marker was drawn on top of the spectral spike it marks, hiding it,
+   so the fundamental looked absent and the third harmonic looked dominant.
+   Checked numerically rather than by eye: the f0 bin held 719.8, 7053.9 and
+   570.4 against local backgrounds of 9.2, 11.0 and 5.0. The physics was right
+   and the figure was wrong. The marker now draws underneath the data.
+2. `bootstrap_snr` raised on near-silent sweep values. A resample can contain
+   only silent trials, which makes the background zero; that is an expected
+   outcome of resampling near a detector's floor, not a bug. Bootstrap draws
+   now floor while the point estimate still raises, so a real all-zero solver
+   output is still caught. Without this E2 could not run at all.
+3. The E3 figure was unreadable because the theory curve dives past -50 dB at
+   low D, compressing the data into the top quarter. The view is now clipped to
+   the measured range, and the redundant "theory shifted to the peak" curve was
+   dropped since at a 2.30 dB offset it simply overplotted the solid one.
+
+**Open issues.**
+
+1. `results/e1.npz` originally stored all 20 raw traces per D, 27 MB. E1 now
+   caches only the plotted trace and the averaged spectrum: 94 KB, same
+   numbers. Worth remembering before any experiment caches raw ensembles.
+2. The two_state_snr prefactor is still unverified, and as noted above this
+   data does not settle it.
+3. The artifact could not be opened from this environment to confirm it renders
+   (the browser here is not signed in to claude.ai). It was verified against
+   the local Elysia server in both light and dark themes.

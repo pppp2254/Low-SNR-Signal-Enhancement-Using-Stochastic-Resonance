@@ -12,6 +12,7 @@ __all__ = [
     "critical_amplitude",
     "kramers_rate",
     "two_state_snr",
+    "two_state_snr_db",
 ]
 
 
@@ -67,3 +68,16 @@ def two_state_snr(a, b, A, D):
     """
     D = np.asarray(D, dtype=float)
     return np.pi * (A * well_position(a, b) / D) ** 2 * kramers_rate(a, b, D)
+
+
+def two_state_snr_db(a, b, A, D, f0, n_periods):
+    """two_state_snr converted to the per-bin ratio metrics.snr_db reports.
+
+    snr_db gives xbar^2 T_rec / (2 S_N) and two_state_snr gives pi xbar^2 / S_N,
+    so the per-bin value is R T_rec / (2 pi) with T_rec = n_periods / f0. Assumes
+    the S_N in the two-state formula is a one-sided PSD in ordinary frequency.
+    That assumption and the pi prefactor are both unverified; neither moves the
+    peak. See PROGRESS.md.
+    """
+    R = two_state_snr(a, b, A, D)
+    return 10 * np.log10(R * (n_periods / f0) / (2 * np.pi))
