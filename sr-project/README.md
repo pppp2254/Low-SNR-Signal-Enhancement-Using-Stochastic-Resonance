@@ -108,6 +108,17 @@ Two consequences worth knowing:
 | `web/` | self-contained interactive demo |
 | `report/` | report and slides |
 
+## Report
+
+Every number in `report/report.md` is generated from `results/`:
+
+```bash
+.venv/bin/python report/extract_numbers.py
+```
+
+That writes `report/numbers.md` and then checks the report, verifying each
+bolded claim against the extracted values. Run it after any experiment reruns.
+
 ## Rules
 
 - All randomness goes through `numpy.random.default_rng(seed)`; seeds live in
@@ -118,7 +129,7 @@ Two consequences worth knowing:
 
 ## Status
 
-WP0 to WP5 done. `signals`, `bistable`, `threshold`, `theory`, `metrics`,
+WP0 to WP5 and WP9 done. `signals`, `bistable`, `threshold`, `theory`, `metrics`,
 `sweep` and `plotting` are implemented and tested (44 tests). E1, E2 and E3
 have run; E3 puts the SNR peak at D = 0.1153 against a theoretical 0.125, and
 the halved-step and Heun checks agree to within 0.7 dB. E4 confirms that the
@@ -129,8 +140,12 @@ criterion: a linear band-pass beats every nonlinear method by 13.6 dB, while
 adding noise is still worth +8.41 dB to the bistable system, and the threshold
 detector goes from chance to perfect to chance as noise alone is increased.
 
-Not started: E8 to E10, the report and the notebook (its experiment cells are
-still stubs). `image_sr` is a docstring stub. See `PROGRESS.md` for open
+The report is in `report/report.md`, slides in `report/slides.md`, and
+`notebooks/demo.ipynb` runs in about 35 s.
+
+Not started: WP6 (E8 pulses, E9 residence times), WP7 (E10 images, `image_sr`
+is still a stub), WP8 (the live simulator) and WP10 (clean-environment
+reproduction). `image_sr` is a docstring stub. See `PROGRESS.md` for open
 issues, including an unverified theory prefactor.
 
 ## Dashboard

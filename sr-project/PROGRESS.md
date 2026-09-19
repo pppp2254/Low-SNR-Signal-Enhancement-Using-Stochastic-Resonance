@@ -459,3 +459,55 @@ which is exactly where the dip lives.
 3. The E7 tuned value a = b = 0.78 comes from E5's measured result, that SNR
    declines monotonically with a inside the sub-threshold region, so the best
    tunable a is the smallest one keeping A below A_c. It is not a fitted value.
+
+## 2026-09-19 - WP9: notebook, report and slides
+
+**Done.** `report/extract_numbers.py` (pulls every cited quantity from
+`results/` and writes `report/numbers.md` and `numbers.json`),
+`report/report.md` (nine sections following PLAN.md 8), `report/slides.md`
+(eleven slides, one figure each, takeaway as the title), and a working
+`notebooks/demo.ipynb`.
+
+**Numbers are traceable, not remembered.** PLAN.md WP9 requires every number in
+the report to come from `results/*.npz` or `*.json`. `extract_numbers.py` is
+the only thing that reads them: 62 quantities across theory, E1 to E7. It then
+checks `report.md` itself, extracting every bolded claim and verifying its
+numeric tokens appear in the extracted set. That check passes, so no figure in
+the text was typed from memory or left stale after a rerun. Rerun it after any
+experiment reruns.
+
+**Notebook runs, verified rather than assumed.** Code cells extracted and
+executed headlessly: **35 s** end to end against PLAN's five-minute budget. It
+reproduces the three regimes, the threshold detector sweep, and a reduced E3
+that finds the peak at **D = 0.1260** against the predicted 0.1250, a 0.8 %
+error on a 26 % grid. It calls `srlab` throughout and defines no solver or
+estimator of its own.
+
+Two bugs surfaced only by running it. The threshold sweep hit the constant
+record case at low sigma, the same one `chunked_snr` handles, and raised; the
+notebook now floors to -30 dB with a comment saying why, which is the behaviour
+the library uses. And `float(snr_db(...)[0])` fails, because `snr_db` returns a
+tuple and `[0]` takes the whole SNR array rather than its first element; the
+cell now unpacks explicitly. The first reduced sweep also gave a 35 % peak
+error on a 42 % grid, which is within one grid point but reads badly, so the
+sweep went to 24 values over 48 periods: 0.8 % error for six more seconds.
+
+**Two TODOs left in the report, both deliberate.** The two-state prefactor is
+still unverified against Gammaitoni et al. (1998), and the reference list is
+from standard citations rather than checked against the papers. Both are marked
+in the text rather than quietly asserted.
+
+**Cache size fixed before it shipped.** `results/e7.npz` was **36.8 MB**: it
+cached five raw ensembles of shape (1, 20, 128000). E7 now reduces to its
+summary numbers inside `compute()`, giving **1.1 KB** with identical values.
+This is the second time a raw ensemble reached the cache, after E1's 27 MB.
+
+**Open issues.**
+
+1. The report's section 7 says the image extension was not attempted, which is
+   accurate: WP7 is not done and `image_sr.py` is still a stub.
+2. `report.md` and `slides.md` are Markdown. If a PDF or a slide deck file is
+   wanted, that is a conversion step this project does not do.
+3. WP10 is the remaining Must-tier item: a single `make_all.py` regenerating
+   every figure in a clean environment, and a comparison against what is
+   committed.

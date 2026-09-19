@@ -129,7 +129,19 @@ def main():
         out["m5_long"] = bistable_run(cfg, D_in, a_tuned, n_long, n_trials, seed + 4)
         out["m5_h1"], out["m5_h0"] = short_pair(
             lambda amp, sd: bistable_run(cfg, D_in, a_tuned, n_short, n_runs, sd, A=amp))
-        return out
+
+        # Reduce here. Caching the raw ensembles made a 37 MB npz for numbers
+        # that fit in a few hundred bytes.
+        cols = {k: [] for k in ("snr", "lo", "hi", "auc", "pd")}
+        for key in ("m1", "m2", "m3", "m4", "m5"):
+            snr, lo, hi = bootstrap_snr(out[f"{key}_long"], fs, f0, n_side=m["n_side"],
+                                        guard=m["guard"], n_boot=m["n_boot"], seed=seed)
+            cols["snr"].append(float(np.ravel(snr)[0]))
+            cols["lo"].append(float(np.ravel(lo)[0]))
+            cols["hi"].append(float(np.ravel(hi)[0]))
+            cols["auc"].append(roc_auc(out[f"{key}_h0"], out[f"{key}_h1"]))
+            cols["pd"].append(pd_at_pfa(out[f"{key}_h0"], out[f"{key}_h1"], pfa))
+        return {k: np.array(v) for k, v in cols.items()}
 
     r = cached("e7", params, compute)
 
@@ -140,15 +152,10 @@ def main():
         ("m4", f"SR at the optimal D = {d_opt}"),
         ("m5", f"parameter-tuned SR (a = b = {a_tuned:.2f})"),
     ]
-    rows = []
-    for key, label in labels:
-        snr, lo, hi = bootstrap_snr(r[f"{key}_long"], fs, f0, n_side=m["n_side"],
-                                    guard=m["guard"], n_boot=m["n_boot"], seed=seed)
-        auc = roc_auc(r[f"{key}_h0"], r[f"{key}_h1"])
-        pd = pd_at_pfa(r[f"{key}_h0"], r[f"{key}_h1"], pfa)
-        rows.append({"method": label, "snr_db": float(np.ravel(snr)[0]),
-                     "snr_lo": float(np.ravel(lo)[0]), "snr_hi": float(np.ravel(hi)[0]),
-                     "auc": auc, "pd_at_pfa": pd})
+    rows = [{"method": label, "snr_db": float(r["snr"][i]), "snr_lo": float(r["lo"][i]),
+             "snr_hi": float(r["hi"][i]), "auc": float(r["auc"][i]),
+             "pd_at_pfa": float(r["pd"][i])}
+            for i, (_, label) in enumerate(labels)]
 
     out_csv = ROOT / "results" / "e7_baselines.csv"
     with out_csv.open("w", newline="") as fh:
