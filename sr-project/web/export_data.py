@@ -22,6 +22,8 @@ FIGURES = [
     ("e3_numerical_checks", "E3", "Halved step and Heun against the baseline"),
     ("e4_robustness", "E4", "Dependence on amplitude and frequency, and the heatmap"),
     ("e5_parameter_tuned", "E5", "Tuning a at fixed input noise"),
+    ("e6_detection", "E6", "Detection from one short record, two systems"),
+    ("e7_baselines", "E7", "Five detectors on the same low-SNR input"),
 ]
 
 

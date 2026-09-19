@@ -70,6 +70,8 @@ web/server.ts             Elysia on Bun serves the page and the figures, port 31
 | `e3_numerical_checks` | `experiments/e3_snr_vs_noise.py` |
 | `e4_robustness` | `experiments/e4_robustness.py` |
 | `e5_parameter_tuned` | `experiments/e5_parameter_tuned.py` |
+| `e6_detection` | `experiments/e6_detection.py` |
+| `e7_baselines` | `experiments/e7_baselines.py` |
 
 Style lives in `src/srlab/plotting.py`, so the figures match each other:
 
@@ -116,15 +118,18 @@ Two consequences worth knowing:
 
 ## Status
 
-WP0 to WP4 done. `signals`, `bistable`, `threshold`, `theory`, `metrics`,
+WP0 to WP5 done. `signals`, `bistable`, `threshold`, `theory`, `metrics`,
 `sweep` and `plotting` are implemented and tested (44 tests). E1, E2 and E3
 have run; E3 puts the SNR peak at D = 0.1153 against a theoretical 0.125, and
 the halved-step and Heun checks agree to within 0.7 dB. E4 confirms that the
 optimal D rises with f0. E5 does not reproduce its tuning optimum, and found
 that PLAN.md 2.5's a = 8 D_in is a D-sweep condition misapplied to an a sweep;
-the correct stationary point is a = 4 D_in.
+the correct stationary point is a = 4 D_in. E6 and E7 answer the detection
+criterion: a linear band-pass beats every nonlinear method by 13.6 dB, while
+adding noise is still worth +8.41 dB to the bistable system, and the threshold
+detector goes from chance to perfect to chance as noise alone is increased.
 
-Not started: E6 to E10, the report and the notebook (its experiment cells are
+Not started: E8 to E10, the report and the notebook (its experiment cells are
 still stubs). `image_sr` is a docstring stub. See `PROGRESS.md` for open
 issues, including an unverified theory prefactor.
 

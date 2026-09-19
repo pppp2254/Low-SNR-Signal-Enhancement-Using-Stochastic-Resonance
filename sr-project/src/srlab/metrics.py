@@ -9,7 +9,8 @@ import numpy as np
 from scipy.signal import correlate, correlation_lags
 from scipy.stats import rankdata
 
-__all__ = ["snr_db", "bootstrap_snr", "xcorr_peak", "roc_auc", "pd_at_pfa"]
+__all__ = ["snr_db", "bootstrap_snr", "f0_power", "xcorr_peak", "roc_auc",
+           "pd_at_pfa"]
 
 # Keeps peak FFT memory near 30 MB whatever the ensemble size.
 _FFT_CHUNK_ELEMENTS = 2_000_000
@@ -132,6 +133,16 @@ def bootstrap_snr(x, fs, f0, n_side=25, guard=1, n_boot=200, seed=0):
         draws[i] = _snr_from_band(band[..., idx, :], n_side, guard, "floor")[0]
     lo, hi = np.percentile(draws, [16, 84], axis=0)
     return snr, lo, hi
+
+
+def f0_power(x, fs, f0):
+    """Periodogram power at f0 for each trial separately.
+
+    The detection statistic of E6. Unlike snr_db this does not average over
+    trials: each record is one observation, and the spread across records is
+    what the ROC curve measures.
+    """
+    return _band_periodograms(x, fs, f0, 1)[..., 1]
 
 
 def xcorr_peak(clean, output):

@@ -90,6 +90,26 @@ experiments:
   e6:
     n_periods: 16                     # short records make detection hard
     n_runs: 500                       # per hypothesis
+    n_D: 20                           # coarser than E3; each D costs two ensembles
+    n_side: 5                         # f0 sits on bin 16, so the E3 band would hit DC
+    roc_at: [0.02, 0.12, 1.0]         # D values drawn as full ROC curves
+    # A = signal.A saturates AUC at 1.000 for every D: detection is trivial at
+    # that amplitude. A_det is weak enough that the curve carries information.
+    A_det: 0.05
+    # Threshold detector, the system with no intra-well response. Same setup as
+    # E2 so the two experiments describe one system.
+    thr_A: 0.7
+    thr_theta: 1.0
+    thr_sigma_min: 0.05
+    # E2 sweeps sigma to 3 because that brackets its SNR peak at 0.62. AUC
+    # saturates well before that, so detection needs a far wider sweep to show
+    # the fall: it returns to chance only near sigma = 90.
+    thr_sigma_max: 300.0
+    n_sigma: 24
+    roc_sigma_at: [0.05, 0.6, 60.0]
+  e7:
+    D_in: 0.02                        # the input's own noise, well below the optimum
+    band_halfwidth: 1                 # bins each side of f0 for the linear band-pass
   e10:
     darken: 0.12                      # scale brightness to ~10-15%
     n_frames: 50                      # averaged binary frames, approach A

@@ -155,3 +155,17 @@ def test_float32_ensemble_matches_float64():
     a = metrics.snr_db(x, FS, F0)[0]
     b = metrics.snr_db(x.astype(np.float64), FS, F0)[0]
     assert a == pytest.approx(b, abs=1e-5)
+
+
+def test_f0_power_is_per_trial_and_separates_hypotheses():
+    """E6's statistic: one number per record, not an ensemble average."""
+    h1 = noisy_sine(0.05, 1.0, n_trials=200, seed=1)
+    h0 = noisy_sine(0.0, 1.0, n_trials=200, seed=2)
+    p1 = metrics.f0_power(h1, FS, F0)
+    p0 = metrics.f0_power(h0, FS, F0)
+    assert p1.shape == (200,) and p0.shape == (200,)
+    assert p1.mean() > 3 * p0.mean()
+    assert metrics.roc_auc(p0, p1) > 0.9
+    # With no signal the two sets are interchangeable.
+    other = metrics.f0_power(noisy_sine(0.0, 1.0, n_trials=200, seed=3), FS, F0)
+    assert metrics.roc_auc(p0, other) == pytest.approx(0.5, abs=0.06)

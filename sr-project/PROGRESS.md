@@ -377,3 +377,85 @@ user's instruction, with condition A kept alongside it.
    df = f0 / n_periods, so holding n_periods fixed measures each f0 in a
    different bandwidth. Peak positions are comparable across f0; peak heights
    are not. Noted in the e4 docstring and on the figure title.
+
+## 2026-09-19 - WP5: detection and baselines
+
+**Done.** `experiments/e6_detection.py` and `e7_baselines.py`, plus
+`metrics.f0_power` (per-record periodogram power at f0, the detection
+statistic; unlike `snr_db` it does not average over trials, because the spread
+across records is what a ROC curve measures). Figures `e6_detection` (four
+panels) and `e7_baselines` (two panels), with `results/e6_detection.csv` and
+`results/e7_baselines.csv`.
+
+**E7, the comparison PLAN.md 8 asks to be stated plainly.** One low-SNR input,
+input noise D_in = 0.02, five detectors. SNR at the baseline A = 0.3 over 128
+periods; AUC over 16-period records at A = 0.05, because at A = 0.3 every
+method scores AUC 1.000 and the column carries no information.
+
+| method | SNR (dB) | AUC | Pd at 5% |
+| --- | --- | --- | --- |
+| linear band-pass on the raw input | **41.60** | 1.000 | 1.000 |
+| threshold detector, no added noise | 30.74 | 0.939 | 0.724 |
+| SR at the optimal D = 0.125 | 27.99 | 0.779 | 0.320 |
+| parameter-tuned SR, a = b = 0.78 | 25.79 | 0.980 | 0.998 |
+| bistable, no added noise (D = 0.02) | 19.58 | 1.000 | 1.000 |
+
+Both halves of PLAN.md 8's required statement are measured. Adding noise to the
+bistable system is worth **+8.41 dB**, 19.58 to 27.99: that is stochastic
+resonance working. The linear band-pass still beats it by **13.6 dB**. The
+band-pass is not a strawman: for a sine of known frequency in white Gaussian
+noise the f0 periodogram bin is the matched filter, so it is the strongest
+linear detector available, and it wins on both columns.
+
+**E6, and the bistable result is more interesting than expected.** At the
+baseline A = 0.3 every AUC saturates at 1.000, so the sweeps run at
+`e6.A_det = 0.05`; the saturated curve is kept and plotted, since it is the
+reason for the change.
+
+The bistable system has two competing regimes:
+
+- D below about 0.02: the particle stays in one well and responds linearly to
+  the drive. That coherent intra-well tone gives AUC 1.000, Pd 1.000.
+- D near 0.05: hopping starts and destroys the tone. AUC dips to 0.665, Pd to
+  0.082.
+- D near dU/2: a genuine stochastic-resonance recovery. AUC rises to 0.792 at
+  D = 0.1626 and Pd to 0.346 at D = 0.0931, a Pd gain of **+0.264** over the
+  dip, with the theoretical optimum at 0.125 sitting between them.
+- D above that: decline to AUC 0.567 at D = 2.
+
+So noise does improve detection, measurably and at the predicted place, but
+only relative to the dip. The intra-well regime at very low noise still beats
+the SR peak outright.
+
+**The threshold detector is where SR is unambiguous.** It has no intra-well
+response: below threshold it emits nothing, so both hypotheses give an empty
+record and AUC is exactly 0.500 with Pd 0.000. Adding noise takes it to AUC
+1.000 and Pd 1.000 at sigma = 0.156, and further noise returns it to chance,
+AUC 0.495 and Pd 0.046 at sigma = 300. Chance to perfect to chance, driven by
+nothing but noise. That answers criterion 5.
+
+The detection sweep needed a far wider sigma range than E2's. E2 stops at
+sigma = 3 because that brackets its SNR peak at 0.62, but AUC saturates well
+before that and only returns to chance near sigma = 90, so `thr_sigma_max` is
+300. Widening the sweep to see the whole curve is not the same as tuning a
+parameter to produce one; the shape was already there, outside the window.
+
+**A conclusion I got wrong first and corrected.** From a coarse three-point
+amplitude scan plus the saturated A = 0.3 data I reported that AUC falls
+monotonically with D and that noise never helps detection. The 20-point sweep
+at A = 0.05 shows that is false: there is a clear dip and a clear SR recovery
+at dU/2. The coarse scan simply had no point between D = 0.01 and D = 0.125,
+which is exactly where the dip lives.
+
+**Open issues.**
+
+1. AUC saturates easily. It reached 1.000 for the threshold detector across
+   nearly two decades of sigma, so the "maximum" there is a broad plateau
+   rather than a point. Pd at a fixed false-alarm rate is the sharper metric
+   and is plotted alongside it throughout.
+2. E7's two columns are at different amplitudes, labelled in the table and in
+   the figure titles. Merging them onto one amplitude would make one column
+   uninformative.
+3. The E7 tuned value a = b = 0.78 comes from E5's measured result, that SNR
+   declines monotonically with a inside the sub-threshold region, so the best
+   tunable a is the smallest one keeping A below A_c. It is not a fitted value.
