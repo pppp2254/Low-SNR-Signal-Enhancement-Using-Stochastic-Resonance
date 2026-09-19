@@ -66,8 +66,27 @@ experiments:
     sigma_min: 0.05
     sigma_max: 3.0
     n_sigma: 40
+  e4:
+    # Heatmap grid. Coarser and shorter than the curve families above, because
+    # cost scales as 1/f0; internally consistent, not comparable to them.
+    heatmap_n_f0: 8
+    heatmap_f0_min: 0.005
+    heatmap_f0_max: 0.05
+    heatmap_n_D: 20
+    heatmap_n_trials: 10
+    heatmap_n_periods: 64
+    heatmap_discard: 5
   e5:
-    D_in: [0.05, 0.1, 0.2]            # fixed input noise, input SNR near -15 dB
+    # Condition A follows PLAN.md: A = signal.A, input SNR bracketing -15 dB.
+    # At this amplitude A_c = 0.385 a puts the predicted optimum a = 8 D_in
+    # inside the super-threshold region, so the prediction is not testable.
+    D_in: [0.05, 0.1, 0.2]
+    # Condition B lowers A until A/D_in <= 1, which is what the two-state
+    # optimum assumes. Costs input SNR (-23 to -28 dB instead of -15 dB) but
+    # puts all three optima well inside the sub-threshold region.
+    A_linear: 0.1
+    D_in_linear: [0.1, 0.2, 0.3]
+    n_a: 25
   e6:
     n_periods: 16                     # short records make detection hard
     n_runs: 500                       # per hypothesis

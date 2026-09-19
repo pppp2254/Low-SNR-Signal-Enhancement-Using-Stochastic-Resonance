@@ -39,7 +39,10 @@ def _band_periodograms(x, fs, f0, n_side):
     is kept, so a 410 MB ensemble reduces to kilobytes without ever holding a
     full spectrum.
     """
-    x = np.asarray(x, dtype=np.float64)
+    # Do not cast the whole ensemble to float64 here: that copy is twice the
+    # size of the float32 input and defeats the chunking below. numpy's rfft
+    # promotes internally, so each chunk is upcast on its own.
+    x = np.asarray(x)
     if x.ndim < 2:
         raise ValueError(
             f"expected (..., n_trials, n_samples), got {x.shape}; wrap one trace as x[None]"

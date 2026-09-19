@@ -2,351 +2,182 @@
 <style>
 :root{
   --ground:#e8eae9; --panel:#eff1f0; --ink:#14181a; --muted:#5a6265;
-  --rule:#c2c8c6; --rule-soft:#d7dcda;
-  --sim:#1f4e79; --theory:#b03a2e; --mark:#b7791f; --alt1:#2e6b4f; --alt2:#7a5230;
+  --rule:#c2c8c6; --rule-soft:#d7dcda; --mark:#b7791f;
+  /* Figures are white-backed matplotlib output; give them a fixed ground so
+     they look the same in both themes. */
+  --fig-bg:#ffffff;
 }
 :root:not([data-theme="light"]){
   @media (prefers-color-scheme:dark){
     --ground:#14181a; --panel:#1b2022; --ink:#e4e8e6; --muted:#94a09e;
-    --rule:#2e3639; --rule-soft:#232a2c;
-    --sim:#6fa8dc; --theory:#e07a68; --mark:#d9a441; --alt1:#5fae88; --alt2:#b58a5e;
+    --rule:#2e3639; --rule-soft:#232a2c; --mark:#d9a441;
   }
 }
 :root[data-theme="dark"]{
   --ground:#14181a; --panel:#1b2022; --ink:#e4e8e6; --muted:#94a09e;
-  --rule:#2e3639; --rule-soft:#232a2c;
-  --sim:#6fa8dc; --theory:#e07a68; --mark:#d9a441; --alt1:#5fae88; --alt2:#b58a5e;
+  --rule:#2e3639; --rule-soft:#232a2c; --mark:#d9a441;
 }
 *{box-sizing:border-box;border-radius:0}
 body{
   margin:0; background:var(--ground); color:var(--ink);
-  font-family:"Times New Roman",Times,serif;
-  font-size:16px; line-height:1.4;
+  font-family:"Times New Roman",Times,serif; font-size:16px; line-height:1.4;
 }
-.wrap{max-width:1280px;margin:0 auto;padding:28px 24px 64px}
-h1{font-size:30px;font-weight:400;letter-spacing:.01em;margin:0;text-wrap:balance}
+.wrap{max-width:1320px;margin:0 auto;padding:28px 24px 64px}
+h1{font-size:30px;font-weight:400;margin:0;text-wrap:balance}
 .params{color:var(--muted);font-size:14px;margin:6px 0 0;font-style:italic}
-.rule{border:0;border-top:1px solid var(--rule);margin:18px 0}
 .strip{display:grid;grid-template-columns:repeat(4,1fr);
-  border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+  border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin-top:18px}
+.stat{padding:12px 16px;border-right:1px solid var(--rule-soft)}
 .stat:nth-child(4n){border-right:0}
 .stat:nth-child(-n+4){border-bottom:1px solid var(--rule-soft)}
-.stat{padding:12px 16px;border-right:1px solid var(--rule-soft)}
-.stat:last-child{border-right:0}
 .stat .k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .stat .v{font-size:24px;font-variant-numeric:tabular-nums;margin-top:2px}
 .stat .v em{font-style:italic;font-size:15px;color:var(--muted)}
 h2{font-size:13px;letter-spacing:.16em;text-transform:uppercase;font-weight:400;
-   color:var(--muted);margin:30px 0 8px;border-bottom:1px solid var(--rule);padding-bottom:5px}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:26px}
-.e1row{display:grid;grid-template-columns:1.8fr 1fr;gap:20px;align-items:start}
-figure{margin:0}
-svg{display:block;width:100%;height:auto;background:var(--panel)}
-.key{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--muted);margin:6px 0 0}
-.key i{display:inline-block;width:20px;height:0;border-top:2px solid;vertical-align:middle;margin-right:5px}
+   color:var(--muted);margin:32px 0 8px;border-bottom:1px solid var(--rule);padding-bottom:5px}
+figure{margin:0 0 26px}
+figure img{display:block;width:100%;height:auto;background:var(--fig-bg);padding:8px}
+figcaption{font-size:13px;color:var(--muted);margin-top:5px;font-style:italic}
 table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
 th,td{text-align:right;padding:3px 8px;border-bottom:1px solid var(--rule-soft)}
-th{font-weight:400;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
-   border-bottom:1px solid var(--rule)}
-th:first-child,td:first-child{text-align:left}
+th{font-weight:400;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+   color:var(--muted);border-bottom:1px solid var(--rule)}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+td:last-child{color:var(--muted)}
 .scroll{overflow-x:auto}
+#controls{display:none;margin-top:18px;padding:12px 0;border-bottom:1px solid var(--rule)}
+#controls.live{display:block}
+.btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{font-family:inherit;font-size:14px;color:var(--ink);background:var(--panel);
+  border:1px solid var(--rule);padding:5px 12px;cursor:pointer}
+button:disabled{color:var(--muted);cursor:default}
+button:focus-visible{outline:2px solid var(--mark);outline-offset:2px}
+#runlog{white-space:pre-wrap;font-size:12px;color:var(--muted);margin-top:8px;
+  max-height:150px;overflow:auto}
+#runstate{font-size:13px;color:var(--muted);margin-left:6px}
 tr.peak td{color:var(--mark)}
-@media (max-width:900px){
-  .row,.e1row{grid-template-columns:1fr}
-  .strip{grid-template-columns:repeat(2,1fr)}
-  .stat:nth-child(2n){border-right:0}
-  .stat:nth-child(-n+6){border-bottom:1px solid var(--rule-soft)}
-}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}
+@media (max-width:900px){.strip{grid-template-columns:repeat(2,1fr)}
+  .stat:nth-child(2n){border-right:0}.cols{grid-template-columns:1fr}}
 </style>
 <div class="wrap">
   <h1>Stochastic resonance in a bistable double well</h1>
   <p class="params" id="params"></p>
   <div class="strip" id="strip"></div>
-
-  <h2>E3 &nbsp; output SNR against noise intensity</h2>
-  <figure><div id="e3"></div>
-    <div class="key">
-      <span><i style="border-color:var(--sim)"></i>simulation</span>
-      <span><i style="border-color:var(--theory)"></i>two-state theory</span>
-      <span><i style="border-color:var(--mark)"></i>D = barrier/2</span>
-    </div>
-  </figure>
-
-  <div class="row">
-    <section>
-      <h2>E2 &nbsp; threshold detector</h2>
-      <figure><div id="e2"></div></figure>
-    </section>
-    <section>
-      <h2>E3 &nbsp; numerical checks</h2>
-      <figure><div id="checks"></div>
-        <div class="key" id="checkskey"></div>
-      </figure>
-    </section>
+  <div id="controls">
+    <div class="btns" id="runbtns"></div>
+    <div id="runlog"></div>
   </div>
-
-  <h2>E1 &nbsp; three noise regimes</h2>
-  <div id="e1"></div>
-
-  <h2>E3 &nbsp; values</h2>
-  <div class="scroll"><table id="table"></table></div>
+  <div id="figures"></div>
+  <div class="cols">
+    <section><h2>Measured values</h2><div class="scroll"><table id="summary"></table></div></section>
+    <section><h2>E3 &nbsp; SNR against D</h2><div class="scroll"><table id="e3table"></table></div></section>
+  </div>
 </div>
 <script src="data.js"></script>
 <script>
-const D3 = window.__DATA__, M = D3.meta;
-const NS = "http://www.w3.org/2000/svg";
-const fmt = (v, n = 2) => Number(v).toFixed(n);
-
-function el(tag, attrs, parent) {
-  const n = document.createElementNS(NS, tag);
-  for (const k in attrs) n.setAttribute(k, attrs[k]);
-  if (parent) parent.appendChild(n);
-  return n;
-}
-
-function scale(kind, dom, range) {
-  const [d0, d1] = kind === "log" ? [Math.log10(dom[0]), Math.log10(dom[1])] : dom;
-  const [r0, r1] = range;
-  return v => {
-    const x = kind === "log" ? Math.log10(v) : v;
-    return r0 + (x - d0) / (d1 - d0) * (r1 - r0);
-  };
-}
-
-function ticks(kind, dom) {
-  if (kind === "log") {
-    const out = [];
-    for (let e = Math.floor(Math.log10(dom[0])); e <= Math.ceil(Math.log10(dom[1])); e++)
-      for (const m of [1, 2, 5]) {
-        const v = m * Math.pow(10, e);
-        if (v >= dom[0] && v <= dom[1]) out.push(v);
-      }
-    return out;
-  }
-  const step = Math.pow(10, Math.floor(Math.log10((dom[1] - dom[0]) / 5)));
-  const s = [1, 2, 5, 10].map(m => m * step).find(m => (dom[1] - dom[0]) / m <= 7);
-  const out = [];
-  for (let v = Math.ceil(dom[0] / s) * s; v <= dom[1]; v += s) out.push(+v.toFixed(10));
-  return out;
-}
-
-function extent(arrays) {
-  let lo = Infinity, hi = -Infinity;
-  for (const a of arrays) for (const v of a) {
-    if (!isFinite(v)) continue;
-    if (v < lo) lo = v; if (v > hi) hi = v;
-  }
-  return [lo, hi];
-}
-
-function chart(host, opt) {
-  const W = opt.w || 1000, H = opt.h || 330;
-  const pad = { l: 62, r: 16, t: 14, b: 44 };
-  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img",
-                          "aria-label": opt.aria || "" });
-  // Curves can leave the frame (theory dives at low D); clip so they never
-  // paint over the axis labels.
-  const clipId = "clip" + (chart.n = (chart.n || 0) + 1);
-  const cp = el("clipPath", { id: clipId }, el("defs", {}, svg));
-  el("rect", { x: pad.l, y: pad.t, width: W - pad.r - pad.l,
-               height: H - pad.b - pad.t }, cp);
-  const plot = el("g", { "clip-path": `url(#${clipId})` }, svg);
-  const x = scale(opt.xScale, opt.xDomain, [pad.l, W - pad.r]);
-  const y = scale(opt.yScale || "lin", opt.yDomain, [H - pad.b, pad.t]);
-
-  for (const t of ticks(opt.xScale, opt.xDomain)) {
-    el("line", { x1: x(t), x2: x(t), y1: pad.t, y2: H - pad.b,
-                 stroke: "var(--rule-soft)", "stroke-width": 1 }, svg);
-    const lab = el("text", { x: x(t), y: H - pad.b + 17, "text-anchor": "middle",
-                             fill: "var(--muted)", "font-size": 12 }, svg);
-    lab.textContent = opt.xScale === "log" ? String(+t.toPrecision(2)) : String(t);
-  }
-  for (const t of ticks(opt.yScale || "lin", opt.yDomain)) {
-    el("line", { x1: pad.l, x2: W - pad.r, y1: y(t), y2: y(t),
-                 stroke: "var(--rule-soft)", "stroke-width": 1 }, svg);
-    const lab = el("text", { x: pad.l - 8, y: y(t) + 4, "text-anchor": "end",
-                             fill: "var(--muted)", "font-size": 12 }, svg);
-    lab.textContent = (opt.yScale === "log") ? String(+t.toPrecision(2)) : String(t);
-  }
-  el("line", { x1: pad.l, x2: pad.l, y1: pad.t, y2: H - pad.b,
-               stroke: "var(--rule)", "stroke-width": 1 }, svg);
-  el("line", { x1: pad.l, x2: W - pad.r, y1: H - pad.b, y2: H - pad.b,
-               stroke: "var(--rule)", "stroke-width": 1 }, svg);
-
-  (opt.bands || []).forEach(b => {
-    const up = b.xs.map((v, i) => `${x(v)},${y(b.hi[i])}`);
-    const dn = b.xs.map((v, i) => `${x(v)},${y(b.lo[i])}`).reverse();
-    el("polygon", { points: up.concat(dn).join(" "), fill: b.color,
-                    "fill-opacity": 0.18 }, plot);
-  });
-
-  (opt.series || []).forEach(s => {
-    const pts = [];
-    for (let i = 0; i < s.xs.length; i++) {
-      const vy = s.ys[i];
-      if (!isFinite(vy) || vy <= 0 && (opt.yScale === "log")) continue;
-      pts.push(`${x(s.xs[i])},${y(vy)}`);
-    }
-    el("polyline", { points: pts.join(" "), fill: "none", stroke: s.color,
-                     "stroke-width": s.width || 1.6,
-                     "stroke-dasharray": s.dash || "none" }, plot);
-    if (s.dots) for (let i = 0; i < s.xs.length; i++)
-      el("circle", { cx: x(s.xs[i]), cy: y(s.ys[i]), r: 2.2, fill: s.color }, plot);
-  });
-
-  (opt.vlines || []).forEach(v => {
-    el("line", { x1: x(v.at), x2: x(v.at), y1: pad.t, y2: H - pad.b,
-                 stroke: v.color, "stroke-width": 1.2, "stroke-dasharray": "5 4" }, plot);
-  });
-  (opt.marks || []).forEach(m => {
-    el("circle", { cx: x(m.x), cy: y(m.y), r: 4.6, fill: "none", stroke: m.color,
-                   "stroke-width": 1.8 }, plot);
-    el("circle", { cx: x(m.x), cy: y(m.y), r: 1.6, fill: m.color }, plot);
-  });
-
-  const xl = el("text", { x: (pad.l + W - pad.r) / 2, y: H - 6, "text-anchor": "middle",
-                          fill: "var(--muted)", "font-size": 13 }, svg);
-  xl.textContent = opt.xLabel;
-  const yl = el("text", { x: 14, y: (pad.t + H - pad.b) / 2, fill: "var(--muted)",
-                          "font-size": 13, "text-anchor": "middle",
-                          transform: `rotate(-90 14 ${(pad.t + H - pad.b) / 2})` }, svg);
-  yl.textContent = opt.yLabel;
-
-  host.appendChild(svg);
-}
-
-function pad10(d, frac = 0.06) {
-  const s = (d[1] - d[0]) * frac || 1;
-  return [d[0] - s, d[1] + s];
-}
+const D = window.__DATA__, M = D.meta;
 
 document.getElementById("params").textContent =
-  `a = ${M.a}, b = ${M.b}, A = ${M.A} (A_c = ${M.Ac}), f0 = ${M.f0}, ` +
-  `dt = ${M.dt}, fs = ${M.fs}, ${M.nPeriods} periods recorded, ` +
-  `${M.discard} discarded, barrier = ${M.barrier}`;
+  `a = ${M.a}, b = ${M.b}, A = ${M.A} (A_c = ${M.Ac}), f0 = ${M.f0}, dt = ${M.dt}, ` +
+  `fs = ${M.fs}, ${M.nPeriods} periods recorded, ${M.discard} discarded, ` +
+  `barrier = ${M.barrier}`;
 
-const e3 = D3.e3;
-const stats = [];
-if (e3) {
-  const step = 100 * (e3.D[1] / e3.D[0] - 1);
-  stats.push(["measured peak D", fmt(e3.D[e3.peak], 4)],
-             ["peak SNR", fmt(e3.snr[e3.peak]) + " <em>dB</em>"],
-             ["theory peak D", fmt(M.dOpt, 4)],
-             ["peak error", fmt(100 * Math.abs(e3.D[e3.peak] - M.dOpt) / M.dOpt, 1) + " <em>%</em>"],
-             ["D grid step", fmt(step, 1) + " <em>%</em>"]);
-  if (e3.theory)
-    stats.push(["theory offset", (e3.snr[e3.peak] - e3.theory[e3.theoryPeak] > 0 ? "+" : "") +
-                                 fmt(e3.snr[e3.peak] - e3.theory[e3.theoryPeak]) + " <em>dB</em>"]);
+document.getElementById("strip").innerHTML = D.stats.map(
+  ([k, v, unit]) => `<div class="stat"><div class="k">${k}</div>` +
+    `<div class="v">${v}${unit ? ` <em>${unit}</em>` : ""}</div></div>`).join("");
+
+document.getElementById("figures").innerHTML = D.figures.map(f =>
+  `<figure><h2>${f.id} &nbsp; ${f.title}</h2>` +
+  `<img src="${f.file}" alt="${f.id}: ${f.title}" loading="lazy">` +
+  `</figure>`).join("");
+
+// Rerun controls. They need the Elysia server, so they stay hidden when the
+// page is served as a static artifact and /run/status is unreachable.
+const RUNS = [["e1", "E1"], ["e2", "E2"], ["e3", "E3"], ["e4", "E4"], ["e5", "E5"],
+              ["data", "Refresh numbers"]];
+const controls = document.getElementById("controls");
+const btns = document.getElementById("runbtns");
+const runlog = document.getElementById("runlog");
+let polling = null;
+
+function setBusy(busy) {
+  btns.querySelectorAll("button").forEach(b => { b.disabled = busy; });
 }
-if (D3.e2)
-  stats.push(["E2 peak sigma", fmt(D3.e2.sigma[D3.e2.peak], 3)],
-             ["E2 peak SNR", fmt(D3.e2.snr[D3.e2.peak]) + " <em>dB</em>"]);
-document.getElementById("strip").innerHTML = stats.map(
-  ([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`
-).join("");
 
-if (e3) {
-  // Theory dives past -50 dB at low D, where the two-state model has no
-  // intra-well motion to describe. Frame on the measured range instead.
-  const simRange = extent([e3.lo, e3.hi]);
-  const top = e3.theory ? Math.max(simRange[1], Math.max(...e3.theory)) : simRange[1];
-  chart(document.getElementById("e3"), {
-    h: 380, xScale: "log", xDomain: [e3.D[0], e3.D[e3.D.length - 1]],
-    yDomain: [simRange[0] - 5, top + 3],
-    xLabel: "noise intensity D (dimensionless)", yLabel: "output SNR at f0 (dB)",
-    aria: "Output SNR rising to a peak near D = 0.12 and falling",
-    bands: [{ xs: e3.D, lo: e3.lo, hi: e3.hi, color: "var(--sim)" }],
-    series: [
-      { xs: e3.D, ys: e3.snr, color: "var(--sim)", width: 1.8, dots: true },
-      e3.theory && { xs: e3.D, ys: e3.theory, color: "var(--theory)", width: 1.5 },
-    ].filter(Boolean),
-    vlines: [{ at: M.dOpt, color: "var(--mark)" }],
-    marks: [{ x: e3.D[e3.peak], y: e3.snr[e3.peak], color: "var(--mark)" }],
-  });
+function renderStatus(s) {
+  const st = document.getElementById("runstate");
+  if (!s.job) { st.textContent = "idle"; return; }
+  const j = s.job;
+  st.textContent = j.done
+    ? `${j.name} finished in ${j.seconds}s${j.code === 0 ? "" : ` (exit ${j.code})`}`
+    : `${j.name} running, ${j.seconds}s`;
+  runlog.textContent = j.log || "";
+  runlog.scrollTop = runlog.scrollHeight;
+}
 
-  const t = document.getElementById("table");
+async function poll() {
+  const s = await (await fetch("/run/status")).json();
+  renderStatus(s);
+  setBusy(s.running);
+  if (!s.running && polling) {
+    clearInterval(polling);
+    polling = null;
+    // Figures are served no-store, so a reload picks up the new PNGs.
+    location.reload();
+  }
+}
+
+async function trigger(name) {
+  setBusy(true);
+  const res = await fetch(`/run/${name}`, { method: "POST" });
+  if (!res.ok) {
+    runlog.textContent = (await res.json()).error || "failed to start";
+    setBusy(false);
+    return;
+  }
+  runlog.textContent = "";
+  if (!polling) polling = setInterval(poll, 1500);
+  poll();
+}
+
+fetch("/run/status").then(r => {
+  if (!r.ok) throw new Error("no run server");
+  return r.json();
+}).then(s => {
+  controls.classList.add("live");
+  btns.innerHTML = RUNS.filter(([k]) => s.experiments.includes(k))
+    .map(([k, label]) => `<button data-run="${k}">${k === "data" ? label : "Rerun " + label}</button>`).join("") +
+    '<span id="runstate">idle</span>';
+  btns.querySelectorAll("button").forEach(b =>
+    b.addEventListener("click", () => trigger(b.dataset.run)));
+  renderStatus(s);
+  if (s.running) { polling = setInterval(poll, 1500); }
+}).catch(() => { /* static artifact, no server: controls stay hidden */ });
+
+const st = document.getElementById("summary");
+st.innerHTML = "<thead><tr><th>Run</th><th>Quantity</th><th>Value</th><th>Note</th></tr></thead>";
+let tb = document.createElement("tbody");
+D.summary.forEach(([run, q, v, note]) => {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td>${run}</td><td>${q}</td><td>${v}</td><td>${note || ""}</td>`;
+  tb.appendChild(tr);
+});
+st.appendChild(tb);
+
+if (D.e3) {
+  const t = document.getElementById("e3table");
   t.innerHTML = "<thead><tr><th>D</th><th>SNR (dB)</th><th>16%</th><th>84%</th>" +
-    (e3.theory ? "<th>theory (dB)</th>" : "") + "</tr></thead>";
-  const tb = document.createElement("tbody");
-  e3.D.forEach((d, i) => {
+                "<th>theory (dB)</th></tr></thead>";
+  tb = document.createElement("tbody");
+  D.e3.D.forEach((d, i) => {
     const tr = document.createElement("tr");
-    if (i === e3.peak) tr.className = "peak";
-    tr.innerHTML = `<td>${fmt(d, 4)}</td><td>${fmt(e3.snr[i])}</td>` +
-      `<td>${fmt(e3.lo[i])}</td><td>${fmt(e3.hi[i])}</td>` +
-      (e3.theory ? `<td>${fmt(e3.theory[i])}</td>` : "");
+    if (i === D.e3.peak) tr.className = "peak";
+    tr.innerHTML = `<td>${d.toFixed(4)}</td><td>${D.e3.snr[i].toFixed(2)}</td>` +
+      `<td>${D.e3.lo[i].toFixed(2)}</td><td>${D.e3.hi[i].toFixed(2)}</td>` +
+      `<td>${D.e3.theory[i].toFixed(2)}</td>`;
     tb.appendChild(tr);
   });
   t.appendChild(tb);
-}
-
-if (D3.e2) {
-  const e2 = D3.e2;
-  chart(document.getElementById("e2"), {
-    w: 640, h: 340, xScale: "log",
-    xDomain: [e2.sigma[0], e2.sigma[e2.sigma.length - 1]],
-    yDomain: pad10(extent([e2.lo, e2.hi])),
-    xLabel: "noise standard deviation sigma", yLabel: "output SNR at f0 (dB)",
-    aria: "Threshold detector SNR peaking near sigma 0.6",
-    bands: [{ xs: e2.sigma, lo: e2.lo, hi: e2.hi, color: "var(--sim)" }],
-    series: [{ xs: e2.sigma, ys: e2.snr, color: "var(--sim)", width: 1.8, dots: true }],
-    marks: [{ x: e2.sigma[e2.peak], y: e2.snr[e2.peak], color: "var(--mark)" }],
-  });
-}
-
-const variants = [
-  ["e3", "dt = " + M.dt + ", EM, " + M.nTrialsFinal + " trials", "var(--sim)"],
-  ["e3_dt_half", "dt halved, EM, " + M.nTrials + " trials", "var(--alt1)"],
-  ["e3_heun", "Heun, " + M.nTrials + " trials", "var(--alt2)"],
-].filter(([k]) => D3[k]);
-if (variants.length) {
-  const ys = variants.flatMap(([k]) => [D3[k].lo, D3[k].hi]);
-  chart(document.getElementById("checks"), {
-    w: 640, h: 340, xScale: "log",
-    xDomain: [D3.e3.D[0], D3.e3.D[D3.e3.D.length - 1]],
-    yDomain: pad10(extent(ys)),
-    xLabel: "noise intensity D (dimensionless)", yLabel: "output SNR at f0 (dB)",
-    aria: "Solver variants overlapping the baseline curve",
-    bands: variants.map(([k, , c]) => ({ xs: D3[k].D, lo: D3[k].lo, hi: D3[k].hi, color: c })),
-    series: variants.map(([k, , c]) => ({ xs: D3[k].D, ys: D3[k].snr, color: c, width: 1.6 })),
-    vlines: [{ at: M.dOpt, color: "var(--mark)" }],
-  });
-  document.getElementById("checkskey").innerHTML = variants.map(
-    ([, label, c]) => `<span><i style="border-color:${c}"></i>${label}</span>`).join("");
-}
-
-if (D3.e1) {
-  const e1 = D3.e1, host = document.getElementById("e1");
-  const freq = e1.freq, spec = e1.spec;
-  e1.D.forEach((d, i) => {
-    const row = document.createElement("div");
-    row.className = "e1row";
-    const a = document.createElement("div"), b = document.createElement("div");
-    row.append(a, b);
-    host.appendChild(row);
-
-    const clean = e1.t.map(tt => Math.cos(2 * Math.PI * M.f0 * tt));
-    chart(a, {
-      w: 720, h: 230, xScale: "lin", xDomain: [e1.t[0], e1.t[e1.t.length - 1]],
-      yDomain: [-2.4, 2.4],
-      xLabel: `time (model units), D = ${d}, SNR = ${fmt(e1.snr[i])} dB`,
-      yLabel: "x (dimensionless)",
-      aria: `Trajectory at D = ${d}`,
-      series: [
-        { xs: e1.t, ys: clean, color: "var(--muted)", width: 1.4, dash: "6 4" },
-        { xs: e1.t, ys: e1.traces[i], color: "var(--sim)", width: 0.9 },
-      ],
-    });
-
-    const fx = freq.slice(1), fy = spec[i].slice(1);
-    chart(b, {
-      w: 420, h: 230, xScale: "lin", yScale: "log",
-      xDomain: [fx[0], fx[fx.length - 1]],
-      yDomain: [Math.max(1e-3, Math.min(...fy)), Math.max(...fy) * 1.6],
-      xLabel: "frequency (model units)", yLabel: "PSD",
-      aria: `Spectrum at D = ${d}`,
-      series: [{ xs: fx, ys: fy, color: "var(--sim)", width: 0.9 }],
-      marks: [{ x: freq[e1.k0], y: spec[i][e1.k0], color: "var(--mark)" }],
-    });
-  });
 }
 </script>

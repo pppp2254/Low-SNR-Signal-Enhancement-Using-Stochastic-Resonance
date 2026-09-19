@@ -5,7 +5,22 @@ Callers supply a numpy.random.Generator built from a seed in the config.
 
 import numpy as np
 
-__all__ = ["n_samples_for", "time_axis", "sine", "pulse_train", "white_noise"]
+__all__ = ["snap_f0", "n_samples_for", "time_axis", "sine", "pulse_train",
+           "white_noise"]
+
+
+def snap_f0(f0, fs, n_periods):
+    """Nearest frequency to f0 giving a whole number of samples in n_periods.
+
+    An arbitrary f0, from a log-spaced grid say, leaves n_periods * fs / f0
+    non-integer, so f0 misses its FFT bin and the record is not a whole number
+    of solver steps. Snapping keeps the leakage-free property. The shift is
+    tiny: on a 40-point grid it is well under one grid step.
+    """
+    n = round(n_periods * fs / f0)
+    if n < 1:
+        raise ValueError(f"f0={f0} is too high for {n_periods} periods at fs={fs}")
+    return n_periods * fs / n
 
 
 def n_samples_for(f0, fs, n_periods):

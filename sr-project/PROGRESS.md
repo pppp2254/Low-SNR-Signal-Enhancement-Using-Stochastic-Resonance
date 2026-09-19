@@ -280,3 +280,100 @@ at once give identical SNR.
 3. The artifact could not be opened from this environment to confirm it renders
    (the browser here is not signed in to claude.ai). It was verified against
    the local Elysia server in both light and dark themes.
+
+## 2026-09-19 - WP4: robustness and parameter tuning
+
+**Done.** `experiments/e4_robustness.py` and `e5_parameter_tuned.py`, plus two
+helpers in `srlab`: `signals.snap_f0` and `sweep.interior_peak`. Figures
+`e4_robustness` (three panels) and `e5_parameter_tuned` (two panels).
+
+**E4, and it confirms time-scale matching.**
+
+Amplitude family at f0 = 0.01, SR peak positions: D = 0.1321 (A = 0.1),
+0.1321 (A = 0.2), 0.1007 (A = 0.3). Essentially constant, which is what the
+two-state model predicts, since the peak D = dU/2 carries no A dependence.
+
+Frequency family at A = 0.3, SR peak positions: D = 0.0879 (f0 = 0.005),
+0.1153 (0.01), 0.1321 (0.02), 0.1986 (0.05). The optimum rises monotonically
+with f0, which is the WP4 check and the time-scale-matching prediction: a
+faster drive needs a faster hopping rate, and that needs more noise.
+
+Heatmap SR peak D against f0: 0.093, 0.093, 0.123, 0.163, 0.163 for
+f0 = 0.0050 to 0.0186, then 0.123 for 0.0259, 0.0360 and 0.0500. Rising over
+the range where the drive is slow enough for hopping to track it, flat above.
+
+**Global maxima are not the resonance.** For A = 0.1 and A = 0.2 the largest
+SNR in the sweep sits at the D = 0.01 edge (31.81 and 37.16 dB), far above
+their SR peaks (17.35 and 24.10 dB). Same for f0 = 0.02 and 0.05. That edge
+rise is the intra-well response: at low D the particle stays in one well and
+responds linearly to the drive with amplitude about A / (2a), giving coherent
+power at f0 while the background falls with D, so SNR grows as D falls. It is
+not stochastic resonance. `sweep.interior_peak` exists to label the resonance
+rather than the edge, and it takes a margin of 2 points, because a maximum
+sitting on the first or last couple of points is part of the edge rise rather
+than separated from it. The same effect explains E3's left-hand upturn.
+
+**E5 does not reproduce the tuning optimum, and PLAN.md's prediction for it is
+wrong by a factor of two.**
+
+PLAN.md 2.5 gives the optimum as dU = 2 D_in, so a = 8 D_in. That is the
+condition for a *D* sweep, where the peak comes from balancing the 1/D^2
+prefactor against exp(-dU/D). Sweeping *a* at fixed D, x_m = 1 is constant and
+the only a dependence is SNR proportional to a exp(-a / (4 D_in)), whose
+stationary point is a = 4 D_in, that is dU = D_in. Confirmed against
+`two_state_snr` itself: its maximum over a sits at exactly 0.20, 0.40, 0.80 and
+1.20 for D_in = 0.05, 0.1, 0.2 and 0.3. The figure now marks a = 4 D_in.
+
+Even against the corrected prediction the measurement does not follow it. Two
+conditions were run, as agreed with the user:
+
+| condition | A | D_in | interior peak a | predicted 4 D_in |
+| --- | --- | --- | --- | --- |
+| A, PLAN amplitude | 0.3 | 0.05 | 0.394 | 0.20 |
+| A | 0.3 | 0.1 | 0.281 | 0.40 |
+| A | 0.3 | 0.2 | 0.251 | 0.80 |
+| B, linear response | 0.1 | 0.1 | 0.281 | 0.40 |
+| B | 0.1 | 0.2 | 0.394 | 0.80 |
+| B | 0.1 | 0.3 | 0.281 | 1.20 |
+
+The interior features sit at a = 0.25 to 0.39 regardless of D_in and do not
+move right as D_in grows, so the WP4 check fails for E5. Both panels are
+monotonic declines with a weak plateau at small a. The cause is the same
+intra-well response: sweeping a downward shrinks the intra-well stiffness 2a,
+so the linear response amplitude A / (2a) grows, and that rise swamps the
+hopping optimum the two-state model describes. Condition A additionally has the
+signal above threshold below a = 0.78 (A_c = 0.385 a), and condition B below
+a = 0.26; both regions are shaded on the figure.
+
+No parameters were changed to make a peak appear. Condition B was added on the
+user's instruction, with condition A kept alongside it.
+
+**Three bugs found and fixed.**
+
+1. `metrics._band_periodograms` cast the whole ensemble to float64 before
+   chunking. That copy is twice the size of the float32 input and defeated the
+   chunking entirely, which is why E5's first run peaked at 1.17 GB on a
+   roughly 900 MB budget. The cast is gone; numpy's rfft promotes each chunk on
+   its own. `snr_db` now adds no measurable memory over the ensemble, and
+   float32 and float64 inputs agree to 1.9e-7. Regression test added.
+2. E4's log-spaced heatmap frequencies broke the on-bin requirement:
+   f0 = 0.006947 left 921198 recorded steps, not a multiple of the decimation
+   factor, and the solver raised. `signals.snap_f0` moves f0 to the nearest
+   value giving a whole number of periods, a shift under 0.003%. Verified end
+   to end through solver and estimator.
+3. Labelling curves by `argmax` reported the intra-well edge rather than the
+   resonance, as above.
+
+**Open issues.**
+
+1. The prefactor question from WP1 is untouched by this work.
+2. E5's null result is worth a paragraph in the report rather than another
+   parameter hunt. To resolve the tuning optimum the intra-well contribution
+   would have to be suppressed, for instance by lowering A far enough that the
+   linear response is negligible at the small-a end, which costs input SNR that
+   PLAN.md 4 wants held near -15 dB. The three requirements are not jointly
+   satisfiable, as tabulated in the WP4 discussion with the user.
+3. Cross-f0 comparison is bandwidth-inconsistent: the analysis bin width is
+   df = f0 / n_periods, so holding n_periods fixed measures each f0 in a
+   different bandwidth. Peak positions are comparable across f0; peak heights
+   are not. Noted in the e4 docstring and on the figure title.

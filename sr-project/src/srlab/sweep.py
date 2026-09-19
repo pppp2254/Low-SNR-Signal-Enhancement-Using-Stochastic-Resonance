@@ -12,7 +12,8 @@ import numpy as np
 
 from .metrics import _SNR_FLOOR_DB, bootstrap_snr
 
-__all__ = ["ROOT", "load_config", "d_grid", "chunked_snr", "cached"]
+__all__ = ["ROOT", "load_config", "d_grid", "chunked_snr", "cached",
+           "interior_peak"]
 
 # Works for an editable install, where __file__ stays in the repo.
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -114,3 +115,22 @@ def _jsonable(o):
     if isinstance(o, (np.integer, np.floating)):
         return o.item()
     raise TypeError(f"cannot serialise {type(o)}")
+
+
+def interior_peak(y, margin=2):
+    """Index of the largest local maximum well inside a sweep, or None.
+
+    The global argmax is not always the resonance. At low D the particle stays
+    in one well and responds linearly to the drive, giving coherent power that
+    grows as the background falls, so SNR rises towards the low-D edge whenever
+    the hopping contribution is weak. That edge rise is not stochastic
+    resonance and must not be labelled as the peak.
+
+    margin excludes maxima that close to either end, since a maximum sitting on
+    the first or last couple of points is part of that edge rise rather than
+    separated from it.
+    """
+    y = np.asarray(y)
+    inner = [i for i in range(margin, y.size - margin)
+             if y[i] >= y[i - 1] and y[i] >= y[i + 1]]
+    return max(inner, key=lambda i: y[i]) if inner else None

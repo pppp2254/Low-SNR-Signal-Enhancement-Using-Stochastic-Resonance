@@ -144,3 +144,14 @@ def test_pd_at_pfa():
     assert metrics.pd_at_pfa(h0, rng.standard_normal(4000) + 6.0) > 0.99
     # The realised false-alarm rate must not exceed the requested one.
     assert np.mean(h0 > np.quantile(h0, 0.95, method="higher")) <= 0.05
+
+
+def test_float32_ensemble_matches_float64():
+    """The solver returns float32. Casting the whole ensemble to float64 up
+    front would double it and defeat the chunking, so the estimator must accept
+    float32 directly and give the same answer."""
+    x = noisy_sine(0.05, 1.0, n_trials=20).astype(np.float32)
+    assert x.dtype == np.float32
+    a = metrics.snr_db(x, FS, F0)[0]
+    b = metrics.snr_db(x.astype(np.float64), FS, F0)[0]
+    assert a == pytest.approx(b, abs=1e-5)
