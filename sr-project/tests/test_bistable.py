@@ -8,7 +8,7 @@ Heun agrees with Euler-Maruyama.
 import numpy as np
 import pytest
 
-from srlab.bistable import simulate
+from srlab.bistable import residence_times, simulate
 from srlab.theory import critical_amplitude, kramers_rate
 
 BASE = dict(a=1.0, b=1.0, f0=0.01, dt=0.01, decimate=10)
@@ -95,3 +95,21 @@ def test_input_override_drives_the_system():
     with pytest.raises(ValueError):
         simulate(**BASE, A=0.0, D=0.0, n_periods=3, discard_periods=0, n_trials=1,
                  seed=5, input_override=np.zeros(10))
+
+
+def test_residence_times_match_the_kramers_rate():
+    """Mean residence time is 1 / r_K, the same check as the switching rate."""
+    D = 0.12
+    t, x = simulate(**BASE, A=0.0, D=[D], n_periods=48, discard_periods=2,
+                    n_trials=6, seed=7)
+    dt_sample = t[1] - t[0]
+    times = np.concatenate([residence_times(trial, dt_sample) for trial in x[0]])
+    assert times.size > 100
+    assert times.mean() == pytest.approx(1 / kramers_rate(1, 1, D), rel=0.20)
+
+
+def test_residence_times_empty_when_no_crossing():
+    """D = 0 with a sub-threshold drive never leaves its well."""
+    t, x = simulate(**BASE, A=0.3, D=0.0, n_periods=8, discard_periods=0,
+                    n_trials=2, seed=11)
+    assert residence_times(x[0, 0], t[1] - t[0]).size == 0

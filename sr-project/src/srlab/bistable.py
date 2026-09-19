@@ -9,7 +9,7 @@ import numpy as np
 
 from .theory import well_position
 
-__all__ = ["simulate"]
+__all__ = ["simulate", "residence_times"]
 
 
 def simulate(
@@ -99,3 +99,24 @@ def simulate(
             step(n_discard + j * decimate + i)
 
     return np.arange(n_samples) * (dt * decimate), out
+
+
+def residence_times(x, dt_sample, x_m=1.0):
+    """Durations spent in one well between committed transitions.
+
+    A state counts only once |x| exceeds x_m / 2. Bare sign changes overcount
+    badly: near the barrier top a trajectory recrosses many times per real
+    transition. Returns an empty array when the trace never crosses.
+
+    At the optimal noise the histogram of these times peaks at odd multiples of
+    half the drive period, which is what synchronisation means: the particle
+    waits for the potential to tilt its way, hops, then waits a half period.
+    """
+    x = np.asarray(x)
+    idx = np.flatnonzero(np.abs(x) > x_m / 2)
+    if idx.size < 2:
+        return np.empty(0)
+    jumps = np.flatnonzero(np.diff(np.sign(x[idx])) != 0)
+    if jumps.size < 2:
+        return np.empty(0)
+    return np.diff(idx[jumps + 1]) * dt_sample
