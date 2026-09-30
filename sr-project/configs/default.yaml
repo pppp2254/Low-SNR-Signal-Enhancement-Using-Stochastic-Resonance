@@ -49,6 +49,7 @@ seeds:
   e8: 1010
   e9: 1011
   e10: 1012
+  e11: 1013
 
 sweeps:
   # PLAN.md section 2.2 "Sweep range" column
@@ -110,6 +111,53 @@ experiments:
   e7:
     D_in: 0.02                        # the input's own noise, well below the optimum
     band_halfwidth: 1                 # bins each side of f0 for the linear band-pass
+  e8:
+    # Aperiodic input. Amplitude stays below A_c so the pulses are
+    # sub-threshold; width is several Kramers times at the optimum so the
+    # particle can respond within one pulse.
+    amplitude: 0.3
+    pulse_rate: 0.003
+    pulse_width: 100.0
+    n_D: 20
+    n_trials: 10
+  e9:
+    D: [0.04, 0.125, 0.6]             # too little, optimal, too much
+    n_periods: 256                    # long record, residence histograms need counts
+    n_trials: 10
+    n_bins: 60
+  e8:
+    # Aperiodic input. Amplitude stays below A_c so the pulses are
+    # sub-threshold; width is several Kramers times at the optimum so the
+    # particle can respond within one pulse.
+    amplitude: 0.3
+    pulse_rate: 0.003
+    pulse_width: 100.0
+    n_D: 20
+    n_trials: 10
+  e9:
+    D: [0.04, 0.125, 0.6]             # too little, optimal, too much
+    n_periods: 256                    # long record, residence histograms need counts
+    n_trials: 10
+    n_bins: 60
+  e11:
+    # Real sound. Input is data/audio/input.wav if present, else a synthetic
+    # melody. Everything is resampled to fs_audio, mono, peak-normalised.
+    fs_audio: 16000
+    max_seconds: 6
+    # Route 1, threshold array: N comparators, each with its own noise, averaged.
+    # Memoryless, so it runs at audio rate with no time scaling.
+    theta: 1.0
+    peak_fraction: 0.8                # sound peak at 80% of theta: never crosses alone
+    sigma_min: 0.01
+    sigma_max: 10.0
+    n_sigma: 24
+    units: [1, 16, 64]
+    # Route 2, the bistable model. It resonates at one frequency, so the
+    # sound's dominant frequency is mapped to f0_model by stretching time.
+    f0_model: 0.05                    # E4 found SR at 0.05; 5x cheaper than 0.01
+    bistable_seconds: 3
+    bistable_D: [0.03, 0.06, 0.1, 0.15, 0.2, 0.3, 0.5, 0.8]
+    bistable_trials: 4
   e10:
     darken: 0.12                      # scale brightness to ~10-15%
     n_frames: 50                      # averaged binary frames, approach A

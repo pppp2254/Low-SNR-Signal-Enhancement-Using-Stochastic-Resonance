@@ -511,3 +511,143 @@ This is the second time a raw ensemble reached the cache, after E1's 27 MB.
 3. WP10 is the remaining Must-tier item: a single `make_all.py` regenerating
    every figure in a clean environment, and a comparison against what is
    committed.
+
+## 2026-09-19 - WP6: pulses and residence times
+
+**Done.** `experiments/e8_pulses.py` and `e9_residence_times.py`, plus
+`bistable.residence_times`, promoted out of the test file as WP1's log said it
+should be when E9 needed it. Figures `e8_pulses` and `e9_residence_times`,
+report sections 5.1 and 5.2, and both added to `extract_numbers.py` and the
+dashboard.
+
+**E8: the effect is not specific to a sine.** A random sub-threshold pulse
+train drives the solver through `input_override`, evaluated on the solver's own
+step grid. One train is shared across every D and trial, so each point differs
+only in the noise added to it. Scored by peak cross-correlation, the metric
+PLAN.md 2.4 reserves for aperiodic input.
+
+The curve repeats the pattern of E4, E5 and E6: an intra-well maximum of
+**r = 0.582** at the lowest D, a dip to **0.166 at D = 0.0403**, then a genuine
+resonance at **r = 0.423 at D = 0.1230**, falling to **0.071** at D = 2. That
+resonance is **1.6 %** from the periodic optimum dU/2 = 0.125. The same
+optimum, for a completely different input.
+
+**E9: synchronisation confirmed, but not where expected.** Measuring the
+fraction of residence times falling near odd half periods against the fraction
+near even ones gives **813** at D = 0.04, **3** at D = 0.125 and **0** at
+D = 0.6.
+
+PLAN.md's check expects peaks at T/2 and 3T/2 at the optimal D. The peaks are
+there, but they are sharpest *below* the optimum. At D = 0.04 hopping is rare
+enough to skip whole cycles, giving five clean peaks from T/2 to 9T/2 across
+two decades of density. At D = 0.125 the particle hops almost every half
+period, so the weight collapses into the first peak and the multi-peak picture
+disappears. Both are synchronisation; the multi-peak form simply needs a slower
+hopping rate to be visible.
+
+The histograms needed a log density axis: the 3T/2 and 5T/2 peaks sit one to
+two orders below the first and are invisible on a linear one.
+
+**A misleading comparison, caught and labelled.** The panels print 1/r_K beside
+the measured mean. At D = 0.04 that is 2301 against a measured 79.3, a factor
+of 29. It is not an error: r_K is the *undriven* Kramers rate, and with A = 0.3
+the drive periodically lowers the barrier and does most of the work. The panels
+now say "undriven 1/r_K" and the report explains the gap, rather than leaving a
+reader to assume the solver is wrong.
+
+**A config edit that landed in the wrong section.** The e8 and e9 blocks were
+inserted by anchoring on `  e10:`, which matches first inside `seeds:`, not
+`experiments:`. YAML took the later duplicate key, so `seeds.e8` became a dict
+and `default_rng` raised. Both blocks now sit under `experiments:` and
+`test_config.py` still passes. Anchor on a line with content, not a bare key
+that repeats.
+
+**Open issues.**
+
+1. WP7 is still not done and needs a photo at `data/input.jpg`, which only the
+   user can supply. `image_sr.py` remains a stub and report section 7 says so.
+2. WP8 was declined by the user in favour of the results dashboard.
+3. WP10 is the remaining Must-tier item.
+
+## 2026-09-19 - Iteration-scale figures (not a PLAN.md work package)
+
+`experiments/e1_every_step.py` runs with decimate = 1 and zooms from the whole
+record (160 steps per pixel, individual iterations unresolvable) to a single
+hop (6.7 pixels per step), overlaying the samples the usual decimate = 10
+pipeline keeps. `experiments/e45_hundred_steps.py` shows 100 iterations for
+the E4 amplitude family and the E5 system-parameter family, splitting each
+Euler-Maruyama step into its well, drive and noise contributions. Noise
+exceeds the deterministic terms by 5x to 22x on a single step, which is why
+stochastic resonance is invisible at iteration scale and only emerges over
+thousands of steps. `results/e1_every_step.npz` is 4.1 MB, the largest cache
+in the project, justified because the raw trace is the deliverable. Logged
+late: these were made on 2026-09-19 and not recorded at the time.
+
+## 2026-09-25 - E11: stochastic resonance on sound (extension)
+
+**Done.** `experiments/e11_audio.py`, `metrics.fidelity_db`, config block
+`experiments.e11`. Input is `data/audio/input.wav` or a path argument; with
+neither, a synthetic three-note melody. Record a real one with
+`arecord -f S16_LE -r 16000 -c 1 -d 5 data/audio/input.wav`. Outputs are
+WAV files in `results/audio/` for listening, and figure `e11_audio`.
+
+`fidelity_db` is needed because sound has no single f0 for `snr_db` to read.
+It is the SNR of the best linear fit of output to the clean sound, equal to
+10 log10(1 + SNR) for additive noise; a constant output scores 0 dB.
+
+**Results on the synthetic melody.**
+
+Route 1, threshold array (memoryless, runs at audio rate). The sound is scaled
+to peak at 80 % of theta, so alone it never crosses and the output is silence.
+Noise lets it through, with a clean resonance that strengthens with the number
+of units:
+
+| units | no noise | best | sigma at best | sigma = 10 |
+| --- | --- | --- | --- | --- |
+| 1 | 0.00 dB | 0.20 dB | 0.496 | 0.00 dB |
+| 16 | 0.00 dB | 2.09 dB | 0.670 | 0.03 dB |
+| 64 | 0.00 dB | 4.65 dB | 0.670 | 0.12 dB |
+
+This is the effect audio engineering calls dither. A linear sensor with the
+same noise and the same 64 units beats it at every sigma (analytic curve on the
+figure), so it helps only because the sensor is a threshold device.
+
+Route 2, the bistable model, time-stretched so the melody's dominant 277 Hz
+lands on f0_model = 0.05. With no noise it scores **11.75 dB**: the particle
+stays in one well and responds linearly, acting as a low-pass filter. Adding
+any noise destroys that, **0.05 dB at best**. For sound, the best way to use
+the bistable is without stochastic resonance.
+
+**Why, on a pure 277 Hz tone.** The same route on a tone gives SNR at 277 Hz a
+shallow maximum, 28.15 dB at D = 0.15 against 23.78 dB at D = 0.8, while
+waveform fidelity never exceeds 0.30 dB. The hopping output is a random
+two-state signal: the tone stands well above the background in its own FFT bin
+while most of the output's power is broadband switching. Stochastic resonance
+improves detection of a tone; it does not reproduce a sound. That is the answer
+to "does this apply to sound": as a detector yes, as an enhancer only through
+many averaged threshold units, and never better than a linear sensor.
+
+**Checked.** 52 tests pass, including two for `fidelity_db` (the additive-noise
+formula within 0.1 dB; gain and offset ignored; a constant scores 0 dB). E11
+runs in 174 s at 192 MB peak RSS. The config blocks were inserted by anchoring
+on lines verified unique first, after WP6's YAML mishap; `test_config.py`
+passes and `experiments.e10` is intact.
+
+**Caught before it shipped.** The first figure overlaid the bistable's best
+*with-noise* output, which reproduces almost nothing, when its best result is
+the no-noise one; the overlay now shows that. The docstring first claimed the
+tone showed "the classic resonance, peaking near D = 0.2"; this run's peak is
+D = 0.15 and the bump is shallow, so the text now says what was measured.
+
+**Open issues.**
+
+1. Only the synthetic melody has been tried. A real recording is the actual
+   test and needs the user to record one; this session did not record from the
+   microphone.
+2. The bistable route maps one dominant frequency. Speech or music spread over
+   several octaves will be treated worse than the melody.
+3. The tone's SNR bump uses four trials per point and is shallow. More trials
+   would sharpen it; they would not change the fidelity result.
+4. `results/audio/` holds eight WAVs of about 94 KB each; decide whether they
+   belong in git.
+5. E11 is not in `report/report.md` or the Thai report doc yet.

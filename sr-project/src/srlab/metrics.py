@@ -9,8 +9,8 @@ import numpy as np
 from scipy.signal import correlate, correlation_lags
 from scipy.stats import rankdata
 
-__all__ = ["snr_db", "bootstrap_snr", "f0_power", "xcorr_peak", "roc_auc",
-           "pd_at_pfa"]
+__all__ = ["snr_db", "bootstrap_snr", "f0_power", "fidelity_db", "xcorr_peak",
+           "roc_auc", "pd_at_pfa"]
 
 # Keeps peak FFT memory near 30 MB whatever the ensemble size.
 _FFT_CHUNK_ELEMENTS = 2_000_000
@@ -143,6 +143,26 @@ def f0_power(x, fs, f0):
     what the ROC curve measures.
     """
     return _band_periodograms(x, fs, f0, 1)[..., 1]
+
+
+def fidelity_db(reference, output):
+    """How well output reproduces a broadband reference waveform, in dB.
+
+    The SNR of the best linear fit a + b * output to the reference:
+    10 log10(var(reference) / var(residual)). Equivalent to
+    10 log10(1 / (1 - rho^2)) with rho the correlation, and to 10 log10(1 + SNR)
+    when output is the reference plus independent noise. A constant output
+    carries nothing and scores 0 dB. For sound, where there is no single f0
+    for snr_db to look at.
+    """
+    r = np.asarray(reference, dtype=float).ravel()
+    o = np.asarray(output, dtype=float).ravel()
+    r = r - r.mean()
+    o = o - o.mean()
+    if not (o @ o) or not (r @ r):
+        return 0.0
+    rho2 = (r @ o) ** 2 / ((r @ r) * (o @ o))
+    return float(10 * np.log10(1 / max(1 - rho2, 1e-12)))
 
 
 def xcorr_peak(clean, output):

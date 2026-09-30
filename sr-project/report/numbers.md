@@ -104,3 +104,27 @@ Every value quoted in `report.md` must appear here.
 | E7 best method by SNR | linear band-pass on the raw input at 41.60 dB | `derived` |
 | E7 gain from adding noise | +8.40 dB | `derived` |
 | E7 linear advantage over SR | +13.62 dB | `derived` |
+
+## E8 aperiodic input
+
+| Quantity | Value | Source |
+| --- | --- | --- |
+| E8 intra-well maximum | r = 0.582 at D = 0.0100 | `results/e8.npz` |
+| E8 dip | r = 0.166 at D = 0.0403 | `derived` |
+| E8 SR peak | r = 0.423 at D = 0.1230 | `results/e8.npz` |
+| E8 SR peak against the periodic optimum | 1.6 % | `derived` |
+| E8 r at the highest D | 0.071 | `results/e8.npz` |
+
+## E9 residence times
+
+| Quantity | Value | Source |
+| --- | --- | --- |
+| E9 residences at D = 0.04 | 3205 | `results/e9.npz` |
+| E9 mean residence at D = 0.04 | 79.3 time units | `results/e9.npz` |
+| E9 odd-to-even concentration at D = 0.04 | 813 | `derived` |
+| E9 residences at D = 0.125 | 6465 | `results/e9.npz` |
+| E9 mean residence at D = 0.125 | 39.5 time units | `results/e9.npz` |
+| E9 odd-to-even concentration at D = 0.125 | 3 | `derived` |
+| E9 residences at D = 0.6 | 57419 | `results/e9.npz` |
+| E9 mean residence at D = 0.6 | 4.5 time units | `results/e9.npz` |
+| E9 odd-to-even concentration at D = 0.6 | 0 | `derived` |

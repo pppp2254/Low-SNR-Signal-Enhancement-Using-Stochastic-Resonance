@@ -1,0 +1,29 @@
+{
+  "bistable_D": [
+    0.03,
+    0.06,
+    0.1,
+    0.15,
+    0.2,
+    0.3,
+    0.5,
+    0.8
+  ],
+  "bistable_seconds": 3,
+  "bistable_trials": 4,
+  "f0_model": 0.05,
+  "fs_audio": 16000,
+  "input": "synthetic",
+  "max_seconds": 6,
+  "n_sigma": 24,
+  "peak_fraction": 0.8,
+  "seed": 1013,
+  "sigma_max": 10.0,
+  "sigma_min": 0.01,
+  "theta": 1.0,
+  "units": [
+    1,
+    16,
+    64
+  ]
+}

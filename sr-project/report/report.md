@@ -109,6 +109,41 @@ and at **0.281**, **0.394** and **0.281** at the weaker amplitude against 0.40,
 0.80 and 1.20. The peaks do not move right as D_in grows. Section 8 explains
 why, and corrects the prediction itself.
 
+### 5.1 The effect is not specific to a sine
+
+**Figure `e8_pulses`.** A random sub-threshold pulse train replaces the sine,
+scored by peak cross-correlation between input and output rather than power at
+one frequency. The curve has the same two regimes as everything else: an
+intra-well maximum of **r = 0.582** at the lowest noise, a dip to
+**r = 0.166 at D = 0.0403** as hopping begins, then a genuine resonance at
+**r = 0.423 at D = 0.1230**, decaying to **0.071** by D = 2. That resonance
+sits **1.6 %** from the optimum the periodic drive gives, which is the result
+worth having: the effect does not depend on the input being periodic.
+
+### 5.2 The hopping really is synchronised
+
+**Figure `e9_residence_times`.** Residence times are how long the particle
+stays in one well between committed transitions. If hopping is locked to the
+drive rather than merely frequent, those times cluster at odd multiples of half
+the drive period. Measuring the fraction of residences falling near odd half
+periods against the fraction near even ones gives **813** at D = 0.04, **3** at
+D = 0.125 and **0** at D = 0.6.
+
+The structure is sharpest *below* the SNR optimum, not at it. At D = 0.04 the
+particle hops rarely enough to skip whole cycles, and the histogram shows five
+clean peaks at T/2 through 9T/2 over two decades of probability density, with a
+mean residence of **79.3 time units** across **3205** residences. At the
+optimum it hops almost every half period, so nearly all the weight collapses
+into the first peak, mean **39.5**. At D = 0.6 the timing is set by noise alone
+and the structure is gone, mean **4.5**. This is independent confirmation of
+the synchronisation that E1 shows only by eye and E3 only as a spectral ratio,
+and it uses no SNR estimator at all.
+
+One caution on that figure. The Kramers time printed on each panel is for the
+*undriven* system. At D = 0.04 it is 2301 against a measured mean of 79.3,
+because with A = 0.3 the drive periodically lowers the barrier and does most of
+the work. The gap is the drive's contribution, not an error.
+
 ## 6. Results: detection and baselines
 
 SNR is a spectral ratio over a long record. A detector sees one short record

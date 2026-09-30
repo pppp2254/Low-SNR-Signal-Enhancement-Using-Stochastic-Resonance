@@ -17,6 +17,7 @@ OUT = ROOT / "web" / "data.js"
 
 FIGURES = [
     ("e1_regimes", "E1", "Three noise regimes in time, with spectra"),
+    ("e1_every_step", "E1", "Every solver iteration, undecimated, with zoom"),
     ("e2_threshold", "E2", "Threshold detector, SNR against noise"),
     ("e3_snr_vs_noise", "E3", "SNR against noise intensity, with two-state theory"),
     ("e3_numerical_checks", "E3", "Halved step and Heun against the baseline"),
@@ -24,6 +25,9 @@ FIGURES = [
     ("e5_parameter_tuned", "E5", "Tuning a at fixed input noise"),
     ("e6_detection", "E6", "Detection from one short record, two systems"),
     ("e7_baselines", "E7", "Five detectors on the same low-SNR input"),
+    ("e8_pulses", "E8", "Aperiodic pulse train, correlation against noise"),
+    ("e9_residence_times", "E9", "Residence times against the drive period"),
+    ("e11_audio", "E11", "Stochastic resonance on sound"),
 ]
 
 

@@ -169,3 +169,17 @@ def test_f0_power_is_per_trial_and_separates_hypotheses():
     # With no signal the two sets are interchangeable.
     other = metrics.f0_power(noisy_sine(0.0, 1.0, n_trials=200, seed=3), FS, F0)
     assert metrics.roc_auc(p0, other) == pytest.approx(0.5, abs=0.06)
+
+
+def test_fidelity_matches_the_additive_noise_formula():
+    """Reference plus independent noise at SNR 10 scores 10 log10(1 + 10)."""
+    rng = np.random.default_rng(0)
+    ref = np.sin(np.linspace(0, 200 * np.pi, 200_000))
+    noisy = ref + rng.standard_normal(ref.size) * np.sqrt(ref.var() / 10)
+    assert metrics.fidelity_db(ref, noisy) == pytest.approx(10 * np.log10(11), abs=0.1)
+
+
+def test_fidelity_ignores_gain_and_offset_and_zeroes_a_constant():
+    ref = np.sin(np.linspace(0, 20 * np.pi, 5000))
+    assert metrics.fidelity_db(ref, 3.0 * ref + 7.0) > 100
+    assert metrics.fidelity_db(ref, np.zeros_like(ref)) == 0.0

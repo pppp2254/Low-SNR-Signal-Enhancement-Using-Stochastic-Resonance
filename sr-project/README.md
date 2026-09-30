@@ -72,6 +72,11 @@ web/server.ts             Elysia on Bun serves the page and the figures, port 31
 | `e5_parameter_tuned` | `experiments/e5_parameter_tuned.py` |
 | `e6_detection` | `experiments/e6_detection.py` |
 | `e7_baselines` | `experiments/e7_baselines.py` |
+| `e8_pulses` | `experiments/e8_pulses.py` |
+| `e9_residence_times` | `experiments/e9_residence_times.py` |
+| `e1_every_step` | `experiments/e1_every_step.py` |
+| `e4_hundred_steps`, `e5_hundred_steps` | `experiments/e45_hundred_steps.py` |
+| `e11_audio` | `experiments/e11_audio.py` |
 
 Style lives in `src/srlab/plotting.py`, so the figures match each other:
 
@@ -108,6 +113,21 @@ Two consequences worth knowing:
 | `web/` | self-contained interactive demo |
 | `report/` | report and slides |
 
+## Sound (E11)
+
+Tests whether stochastic resonance applies to real sound. Record five seconds
+and run it:
+
+```bash
+arecord -f S16_LE -r 16000 -c 1 -d 5 data/audio/input.wav
+.venv/bin/python experiments/e11_audio.py
+```
+
+Or pass any WAV path as the argument. With no input it uses a synthetic
+melody. Listen to the results in `results/audio/`: `threshold_no_noise.wav` is
+silence, `threshold_best_max.wav` is the sound recovered by 64 noisy threshold
+units, `bistable_no_noise.wav` is the bistable without noise.
+
 ## Report
 
 Every number in `report/report.md` is generated from `results/`:
@@ -129,7 +149,7 @@ bolded claim against the extracted values. Run it after any experiment reruns.
 
 ## Status
 
-WP0 to WP5 and WP9 done. `signals`, `bistable`, `threshold`, `theory`, `metrics`,
+WP0 to WP6 and WP9 done. `signals`, `bistable`, `threshold`, `theory`, `metrics`,
 `sweep` and `plotting` are implemented and tested (44 tests). E1, E2 and E3
 have run; E3 puts the SNR peak at D = 0.1153 against a theoretical 0.125, and
 the halved-step and Heun checks agree to within 0.7 dB. E4 confirms that the
@@ -143,7 +163,7 @@ detector goes from chance to perfect to chance as noise alone is increased.
 The report is in `report/report.md`, slides in `report/slides.md`, and
 `notebooks/demo.ipynb` runs in about 35 s.
 
-Not started: WP6 (E8 pulses, E9 residence times), WP7 (E10 images, `image_sr`
+Not started: WP7 (E10 images, `image_sr`
 is still a stub), WP8 (the live simulator) and WP10 (clean-environment
 reproduction). `image_sr` is a docstring stub. See `PROGRESS.md` for open
 issues, including an unverified theory prefactor.

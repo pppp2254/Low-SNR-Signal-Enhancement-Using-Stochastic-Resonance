@@ -60,5 +60,19 @@
   "E7 parameter-tuned SR (a = b = 0.78)": "SNR 25.79 dB, AUC 0.980, Pd 0.998",
   "E7 best method by SNR": "linear band-pass on the raw input at 41.60 dB",
   "E7 gain from adding noise": "+8.40 dB",
-  "E7 linear advantage over SR": "+13.62 dB"
+  "E7 linear advantage over SR": "+13.62 dB",
+  "E8 intra-well maximum": "r = 0.582 at D = 0.0100",
+  "E8 dip": "r = 0.166 at D = 0.0403",
+  "E8 SR peak": "r = 0.423 at D = 0.1230",
+  "E8 SR peak against the periodic optimum": "1.6 %",
+  "E8 r at the highest D": "0.071",
+  "E9 residences at D = 0.04": "3205",
+  "E9 mean residence at D = 0.04": "79.3 time units",
+  "E9 odd-to-even concentration at D = 0.04": "813",
+  "E9 residences at D = 0.125": "6465",
+  "E9 mean residence at D = 0.125": "39.5 time units",
+  "E9 odd-to-even concentration at D = 0.125": "3",
+  "E9 residences at D = 0.6": "57419",
+  "E9 mean residence at D = 0.6": "4.5 time units",
+  "E9 odd-to-even concentration at D = 0.6": "0"
 }
