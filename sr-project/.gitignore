@@ -16,3 +16,6 @@ figures/e10_*
 !figures/e10_sr_curve.*
 !figures/e10_frames.*
 !figures/e10_denoise.*
+
+# copy made by the Vercel build in web/
+web/figures/

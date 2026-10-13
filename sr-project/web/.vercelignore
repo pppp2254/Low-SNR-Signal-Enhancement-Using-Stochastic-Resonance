@@ -1,0 +1,7 @@
+# Static dashboard only. server.ts is the local Bun rerun server;
+# without package.json Vercel stops treating this folder as an Elysia app.
+server.ts
+package.json
+bun.lock
+node_modules
+export_data.py

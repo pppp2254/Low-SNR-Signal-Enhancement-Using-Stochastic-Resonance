@@ -1,0 +1,6 @@
+{
+  "framework": null,
+  "installCommand": "",
+  "buildCommand": "mkdir -p figures && cp ../figures/*.png figures/",
+  "outputDirectory": "."
+}
