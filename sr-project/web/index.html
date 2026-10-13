@@ -89,7 +89,7 @@ document.getElementById("strip").innerHTML = D.stats.map(
 
 document.getElementById("figures").innerHTML = D.figures.map(f =>
   `<figure><h2>${f.id} &nbsp; ${f.title}</h2>` +
-  `<img src="${f.file}" alt="${f.id}: ${f.title}" loading="lazy">` +
+  `<img src="${f.file}" alt="${f.id}: ${f.title}" loading="lazy" onerror="this.closest('figure').remove()">` +
   `</figure>`).join("");
 
 // Rerun controls. They need the Elysia server, so they stay hidden when the

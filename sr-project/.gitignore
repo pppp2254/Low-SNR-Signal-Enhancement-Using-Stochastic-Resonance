@@ -12,3 +12,7 @@ data/picture/
 figures/e10_*
 # synthetic grating, no third-party image
 !figures/e10_grating.*
+# curves and dot plots, image file names only, no pixels
+!figures/e10_sr_curve.*
+!figures/e10_frames.*
+!figures/e10_denoise.*

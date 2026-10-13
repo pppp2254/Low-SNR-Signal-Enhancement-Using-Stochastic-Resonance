@@ -1,0 +1,7 @@
+# Static dashboard only: web/index.html, web/data.js and figures/.
+# server.ts is the local Bun rerun server; Vercel would try to build it.
+web/server.ts
+web/package.json
+web/bun.lock
+web/node_modules
+.venv

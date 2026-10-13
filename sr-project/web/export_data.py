@@ -27,8 +27,11 @@ FIGURES = [
     ("e7_baselines", "E7", "Five detectors on the same low-SNR input"),
     ("e8_pulses", "E8", "Aperiodic pulse train, correlation against noise"),
     ("e9_residence_times", "E9", "Residence times against the drive period"),
+    ("e10_grating", "E10", "Foundation: a sub-threshold 2-D grating, SNR against noise"),
     ("e10_image_grid", "E10", "Low-light images: SR against classical methods"),
     ("e10_sr_curve", "E10", "Threshold SR on images: SSIM and PSNR against noise"),
+    ("e10_frames", "E10", "More frames: grain against N, and SSIM"),
+    ("e10_denoise", "E10", "Denoising after SR, repeated passes, fair baselines"),
     ("e11_audio", "E11", "Stochastic resonance on sound"),
 ]
 
@@ -133,6 +136,43 @@ def main():
                 data["summary"].append(
                     ["E5", f"A = {A_val}, D_in = {d_in}, peak a", f"{a_pk:.3f}",
                      f"predicted 4 D_in = {4 * d_in:.2f}"])
+
+    g = load("e10_grating")
+    if g is not None:
+        k = int(np.argmax(g["snr"]))
+        data["summary"].append(["E10", "grating peak sigma", f"{g['sigma'][k]:.3f}",
+                                f"{g['snr'][k]:.2f} dB, theory {np.max(g['theory']):.2f} dB"])
+    # Every E10 image as numbers only; the pictures stay local (third-party art).
+    csv_path = ROOT / "results" / "e10_metrics.csv"
+    if csv_path.exists():
+        import csv
+        rows = list(csv.DictReader(csv_path.open()))
+        for img in dict.fromkeys(r["image"] for r in rows):
+            sc = {r["method"]: float(r["ssim"]) for r in rows if r["image"] == img}
+            sr = next(v for k, v in sc.items() if k.startswith("SR"))
+            best = max((k for k in sc if not k.startswith(("SR", "dark"))), key=sc.get)
+            stem = img.rsplit(".", 1)[0]
+            note = [f"best {best} {sc[best]:.3f}"]
+            fr = load(f"e10_frames_{stem}")
+            if fr is not None:
+                note.append(f"400 frames {fr['ssim'][-1]:.3f}")
+            d = load(f"e10_denoise_{stem}")
+            if d is not None:
+                m = dict(zip(map(str, d["names"]), d["ssim"]))
+                note.append(f"SR denoised {max(m['SR then TV'], m['SR then NLM']):.3f}")
+                note.append("baseline denoised " + f"{max(v for k, v in m.items() if ' then ' in k and not k.startswith(('SR', 'pass'))):.3f}")
+            data["summary"].append(["E10", f"{img}: SR SSIM", f"{sr:.3f}", ", ".join(note)])
+    dn = sorted(ROOT.glob("results/e10_denoise_*.npz"))
+    if dn:
+        wins = 0
+        for p in dn:
+            v = np.load(p)
+            sc = dict(zip(map(str, v["names"]), v["ssim"]))
+            sr = max(s for n, s in sc.items() if n.startswith(("SR", "pass")))
+            base = max(s for n, s in sc.items() if " then " in n and not n.startswith(("SR", "pass")))
+            wins += base > sr
+        data["summary"].append(["E10", "denoised baseline beats every SR variant",
+                                f"{wins} of {len(dn)} images", "both sides denoised"])
 
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text("window.__DATA__ = " + json.dumps(data, separators=(",", ":")) + ";\n")
