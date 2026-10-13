@@ -128,3 +128,94 @@ Every value quoted in `report.md` must appear here.
 | E9 residences at D = 0.6 | 57419 | `results/e9.npz` |
 | E9 mean residence at D = 0.6 | 4.5 time units | `results/e9.npz` |
 | E9 odd-to-even concentration at D = 0.6 | 0 | `derived` |
+
+## E10 foundation: two-dimensional grating
+
+| Quantity | Value | Source |
+| --- | --- | --- |
+| E10 grating sigma values at the -30 dB floor | 5 | `results/e10_grating.npz` |
+| E10 grating peak | 30.51 dB at sigma = 0.690 | `results/e10_grating.npz` |
+| E10 grating theory peak | 30.37 dB at sigma = 0.690 | `results/e10_grating.npz` |
+| E10 grating SNR at the largest sigma | 21.46 dB at sigma = 3.0 | `results/e10_grating.npz` |
+| E10 grating largest gap to theory where theory is above 0 dB | 0.31 dB over 33 sigma values | `derived` |
+
+## E10 low-light images
+
+| Quantity | Value | Source |
+| --- | --- | --- |
+| E10 SSIM on MabelleMona1.jpg | dark input: 0.185; histogram eq: 0.408; CLAHE: 0.520; gamma 0.45: 0.591; SR, sigma 0.099: 0.195 | `results/e10_metrics.csv` |
+| E10 best PSNR on MabelleMona1.jpg | CLAHE 17.52 dB, SR 9.01 dB | `results/e10_metrics.csv` |
+| E10 SR resonance on MabelleMona1.jpg | SSIM 0.001 at sigma 0.001 -> 0.195 at 0.099 -> 0.111 at 0.5 | `results/e10_MabelleMona1.npz` |
+| E10 SR SSIM against frame count on MabelleMona1.jpg | N 10: 0.081; N 25: 0.138; N 50: 0.195; N 100: 0.263; N 200: 0.336; N 400: 0.408; limit 0.579 | `results/e10_frames_MabelleMona1.npz` |
+| E10 SSIM on MabelleMona2.jpg | dark input: 0.195; histogram eq: 0.275; CLAHE: 0.466; gamma 0.45: 0.693; SR, sigma 0.099: 0.179 | `results/e10_metrics.csv` |
+| E10 best PSNR on MabelleMona2.jpg | CLAHE 23.17 dB, SR 13.24 dB | `results/e10_metrics.csv` |
+| E10 SR resonance on MabelleMona2.jpg | SSIM 0.001 at sigma 0.001 -> 0.179 at 0.099 -> 0.106 at 0.5 | `results/e10_MabelleMona2.npz` |
+| E10 SR SSIM against frame count on MabelleMona2.jpg | N 10: 0.073; N 25: 0.125; N 50: 0.179; N 100: 0.243; N 200: 0.325; N 400: 0.416; limit 0.593 | `results/e10_frames_MabelleMona2.npz` |
+| E10 SSIM on badapple.png | dark input: 0.470; histogram eq: 0.112; CLAHE: 0.372; gamma 0.45: 0.379; SR, sigma 0.034: 0.463 | `results/e10_metrics.csv` |
+| E10 best PSNR on badapple.png | CLAHE 22.86 dB, SR 8.00 dB | `results/e10_metrics.csv` |
+| E10 SR resonance on badapple.png | SSIM 0.372 at sigma 0.001 -> 0.463 at 0.034 -> 0.070 at 0.5 | `results/e10_badapple.npz` |
+| E10 SR SSIM against frame count on badapple.png | N 10: 0.418; N 25: 0.446; N 50: 0.463; N 100: 0.476; N 200: 0.490; N 400: 0.495; limit 0.504 | `results/e10_frames_badapple.npz` |
+| E10 SSIM on black white river.jpeg | dark input: 0.198; histogram eq: 0.258; CLAHE: 0.441; gamma 0.45: 0.659; SR, sigma 0.099: 0.138 | `results/e10_metrics.csv` |
+| E10 best PSNR on black white river.jpeg | CLAHE 20.33 dB, SR 11.34 dB | `results/e10_metrics.csv` |
+| E10 SR resonance on black white river.jpeg | SSIM 0.000 at sigma 0.001 -> 0.138 at 0.099 -> 0.105 at 0.5 | `results/e10_black white river.npz` |
+| E10 SR SSIM against frame count on black white river.jpeg | N 10: 0.056; N 25: 0.099; N 50: 0.138; N 100: 0.193; N 200: 0.266; N 400: 0.334; limit 0.508 | `results/e10_frames_black white river.npz` |
+| E10 SSIM on gradiant.jpeg | dark input: 0.222; histogram eq: 0.303; CLAHE: 0.414; gamma 0.45: 0.593; SR, sigma 0.075: 0.138 | `results/e10_metrics.csv` |
+| E10 best PSNR on gradiant.jpeg | CLAHE 17.64 dB, SR 7.92 dB | `results/e10_metrics.csv` |
+| E10 SR resonance on gradiant.jpeg | SSIM 0.016 at sigma 0.001 -> 0.138 at 0.075 -> 0.088 at 0.5 | `results/e10_gradiant.npz` |
+| E10 SR SSIM against frame count on gradiant.jpeg | N 10: 0.055; N 25: 0.091; N 50: 0.138; N 100: 0.185; N 200: 0.240; N 400: 0.297; limit 0.411 | `results/e10_frames_gradiant.npz` |
+| E10 SSIM on images.jpeg | dark input: 0.067; histogram eq: 0.800; CLAHE: 0.906; gamma 0.45: 0.530; SR, sigma 0.075: 0.653 | `results/e10_metrics.csv` |
+| E10 best PSNR on images.jpeg | CLAHE 20.34 dB, SR 16.99 dB | `results/e10_metrics.csv` |
+| E10 SR resonance on images.jpeg | SSIM 0.000 at sigma 0.001 -> 0.653 at 0.075 -> 0.173 at 0.5 | `results/e10_images.npz` |
+| E10 SR SSIM against frame count on images.jpeg | N 10: 0.343; N 25: 0.513; N 50: 0.653; N 100: 0.758; N 200: 0.829; N 400: 0.866; limit 0.924 | `results/e10_frames_images.npz` |
+| E10 images where the best baseline beats SR by SSIM | 5 of 6 | `derived` |
+| E10 images where SR beats the untouched dark input | 2 of 6 | `derived` |
+| E10 images where CLAHE has the best PSNR | 6 of 6 | `derived` |
+| E10 CLAHE PSNR range | 17.52 to 23.17 dB | `derived` |
+| E10 SR PSNR range | 7.92 to 16.99 dB | `derived` |
+| E10 SR peak sigma range | 0.034 to 0.099 | `derived` |
+| E10 grain slope against N | -0.501 to -0.497 | `derived` |
+| E10 grain, largest deviation from sqrt(mean p(1-p) / N) | 0.8 % | `derived` |
+| E10 images where SR at the largest N beats the dark input | 6 of 6 | `derived` |
+| E10 images where SR at the largest N beats the best baseline | 1 of 6 | `derived` |
+| E10 images where SR's N -> infinity limit beats the best baseline | 2 of 6 | `derived` |
+
+## E10 denoising afterwards
+
+| Quantity | Value | Source |
+| --- | --- | --- |
+| E10 denoise on MabelleMona1 | SR 0.195; SR then TV 0.698; pass 2, theta median 0.728; gamma 0.45 0.591; CLAHE then NLM 0.935 | `results/e10_denoise_MabelleMona1.npz` |
+| E10 denoise mean brightness on MabelleMona1 | original 0.675; SR then TV 0.369; pass 2, theta median 0.522; CLAHE then NLM 0.561 | `results/e10_denoise_MabelleMona1.npz` |
+| E10 denoise on MabelleMona2 | SR 0.179; SR then NLM 0.752; pass 2, theta median 0.766; gamma 0.45 0.693; CLAHE then TV 0.945 | `results/e10_denoise_MabelleMona2.npz` |
+| E10 denoise mean brightness on MabelleMona2 | original 0.462; SR then TV 0.284; pass 2, theta median 0.531; CLAHE then TV 0.414 | `results/e10_denoise_MabelleMona2.npz` |
+| E10 denoise on badapple | SR 0.463; SR then TV 0.495; pass 1, theta median 0.495; gamma 0.45 0.379; TV then CLAHE 0.724 | `results/e10_denoise_badapple.npz` |
+| E10 denoise mean brightness on badapple | original 0.527; SR then TV 0.243; pass 2, theta median 0.418; TV then CLAHE 0.527 | `results/e10_denoise_badapple.npz` |
+| E10 denoise on black white river | SR 0.138; SR then TV 0.760; pass 2, theta median 0.799; gamma 0.45 0.659; CLAHE then NLM 0.926 | `results/e10_denoise_black white river.npz` |
+| E10 denoise mean brightness on black white river | original 0.647; SR then TV 0.412; pass 2, theta median 0.539; CLAHE then NLM 0.569 | `results/e10_denoise_black white river.npz` |
+| E10 denoise on gradiant | SR 0.138; SR then TV 0.694; pass 2, theta median 0.749; gamma 0.45 0.593; CLAHE then TV 0.936 | `results/e10_denoise_gradiant.npz` |
+| E10 denoise mean brightness on gradiant | original 0.716; SR then TV 0.360; pass 2, theta median 0.456; CLAHE then TV 0.608 | `results/e10_denoise_gradiant.npz` |
+| E10 denoise on images | SR 0.653; SR then NLM 0.579; pass 1, theta median 0.522; CLAHE 0.906; CLAHE then NLM 0.882 | `results/e10_denoise_images.npz` |
+| E10 denoise mean brightness on images | original 0.415; SR then TV 0.324; pass 2, theta median 0.552; CLAHE then NLM 0.492 | `results/e10_denoise_images.npz` |
+| E10 denoise: images where denoised SR beats the best undenoised baseline | 5 of 6 | `derived` |
+| E10 denoise: images where denoising lowers SR's SSIM | 1 of 6 | `derived` |
+| E10 denoise: images where the best denoised baseline beats every SR variant | 6 of 6 | `derived` |
+| E10 denoise: images where pass 2 at the median beats pass 1 | 4 of 6 | `derived` |
+| E10 denoise: repeated passes, theta at median, mean over images | pass 1: SSIM 0.649, brightness 0.59x; pass 2: SSIM 0.620, brightness 0.92x; pass 3: SSIM 0.604, brightness 0.89x; pass 4: SSIM 0.573, brightness 0.90x; pass 5: SSIM 0.583, brightness 0.92x | `derived` |
+| E10 denoise: repeated passes, theta at max, mean over images | pass 1: SSIM 0.649, brightness 0.59x; pass 2: SSIM 0.528, brightness 0.45x; pass 3: SSIM 0.460, brightness 0.39x; pass 4: SSIM 0.390, brightness 0.34x; pass 5: SSIM 0.377, brightness 0.31x | `derived` |
+
+## E11 sound
+
+| Quantity | Value | Source |
+| --- | --- | --- |
+| E11 threshold array peak fidelity, 1 unit | 0.20 dB at sigma = 0.50 | `results/e11.npz` |
+| E11 threshold array peak fidelity, 16 units | 2.09 dB at sigma = 0.67 | `results/e11.npz` |
+| E11 threshold array peak fidelity, 64 units | 4.65 dB at sigma = 0.67 | `results/e11.npz` |
+| E11 threshold fidelity at the lowest sigma | 0.00 dB at sigma = 0.01 | `results/e11.npz` |
+| E11 linear sensor at the array's peak sigma | 10.28 dB, +5.63 dB over the array | `derived` |
+| E11 smallest linear margin over the array | +0.06 dB | `derived` |
+| E11 dominant frequency | 277.3 Hz | `results/e11.npz` |
+| E11 solver steps per audio sample | 35 | `results/e11.npz` |
+| E11 bistable fidelity with no noise | 11.75 dB | `results/e11.npz` |
+| E11 bistable best fidelity with noise | 0.05 dB at D = 0.5 | `results/e11.npz` |
+| E11 pure tone peak SNR | 28.15 dB at D = 0.15 | `results/e11.npz` |
+| E11 pure tone SNR at the lowest and highest D | 27.50 and 23.78 dB | `results/e11.npz` |
+| E11 pure tone fidelity range | 0.04 to 0.30 dB | `results/e11.npz` |

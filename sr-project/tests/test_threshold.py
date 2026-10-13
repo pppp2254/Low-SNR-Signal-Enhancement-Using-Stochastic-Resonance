@@ -40,3 +40,26 @@ def test_same_seed_reproduces():
     assert not np.array_equal(
         threshold_detector(**kw, seed=9), threshold_detector(**kw, seed=10)
     )
+
+
+def test_per_trial_draws_match_one_block_draw():
+    """Drawing trial by trial must give the same stream as the original single draw."""
+    s = signal()
+    rng = np.random.default_rng(4)
+    ref = np.stack([s + sg * rng.standard_normal((3, s.size)) > 1.0 for sg in (0.3, 1.0)])
+    y = threshold_detector(s, sigma=[0.3, 1.0], theta=1.0, n_trials=3, seed=4)
+    assert np.array_equal(y, ref.astype(np.float32))
+
+
+def test_2d_grating_snr_matches_theory_and_needs_noise():
+    """E10 grating: a sub-threshold grating is invisible without noise and follows theory with it."""
+    from srlab.metrics import snr2d_db
+    from srlab.threshold import threshold_snr2d_theory_db
+
+    n, k = 64, (8, 4)
+    y, x = np.mgrid[0:n, 0:n]
+    s = 0.7 * np.cos(2 * np.pi * (k[0] * x + k[1] * y) / n)
+    silent = threshold_detector(s.ravel(), 1e-3, 1.0, 8, seed=1)[0].reshape(8, n, n)
+    assert silent.max() == 0 and snr2d_db(silent, k) == -30.0
+    frames = threshold_detector(s.ravel(), 0.6, 1.0, 64, seed=2)[0].reshape(64, n, n)
+    assert abs(snr2d_db(frames, k) - threshold_snr2d_theory_db(s, 1.0, 0.6, k)[0]) < 1.0

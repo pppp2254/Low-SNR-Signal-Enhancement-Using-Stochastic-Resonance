@@ -9,7 +9,7 @@ import numpy as np
 from scipy.signal import correlate, correlation_lags
 from scipy.stats import rankdata
 
-__all__ = ["snr_db", "bootstrap_snr", "f0_power", "fidelity_db", "xcorr_peak",
+__all__ = ["snr_db", "snr2d_db", "bootstrap_snr", "f0_power", "fidelity_db", "xcorr_peak",
            "roc_auc", "pd_at_pfa"]
 
 # Keeps peak FFT memory near 30 MB whatever the ensemble size.
@@ -113,6 +113,26 @@ def snr_db(x, fs, f0, n_side=25, guard=1):
     Returns (snr, S, N): dB, signal power at f0 less background, background per bin.
     """
     return _snr_from_band(_band_periodograms(x, fs, f0, n_side), n_side, guard)
+
+
+def snr2d_db(frames, k, n_side=6, guard=1):
+    """Spatial SNR of a 2-D pattern at wavenumber k = (kx, ky), in dB (E10 grating).
+
+    snr_db in two dimensions: frames is (n_frames, ny, nx), periodograms are
+    averaged over frames, and the background is the median of a
+    (2 n_side + 1)^2 window around k with a (2 guard + 1)^2 hole at k. Keep the
+    window clear of DC and of 2k. Floored at -30 dB like snr_db.
+    """
+    p = (np.abs(np.fft.fft2(np.asarray(frames, dtype=float))) ** 2).mean(axis=0)
+    kx, ky = k
+    off = np.arange(-n_side, n_side + 1)
+    win = p[np.ix_((ky + off) % p.shape[0], (kx + off) % p.shape[1])]
+    hole = (np.abs(off)[:, None] <= guard) & (np.abs(off)[None, :] <= guard)
+    noise = np.median(win[~hole])
+    if noise <= 0:
+        return _SNR_FLOOR_DB
+    sig = max(p[ky % p.shape[0], kx % p.shape[1]] - noise, noise * 10 ** (_SNR_FLOOR_DB / 10))
+    return float(10 * np.log10(sig / noise))
 
 
 def bootstrap_snr(x, fs, f0, n_side=25, guard=1, n_boot=200, seed=0):

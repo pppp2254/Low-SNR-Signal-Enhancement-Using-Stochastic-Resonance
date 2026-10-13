@@ -1,0 +1,16 @@
+{
+  "darken": 0.12,
+  "denoise": {
+    "passes": 5
+  },
+  "gamma": 0.45,
+  "image": "35bec171a341afaec4e24636acf6e9f6754766b6",
+  "images": "data/picture",
+  "n_frames": 50,
+  "n_sigma": 24,
+  "seed": 58982,
+  "sensor_noise": 0.005,
+  "sigma": 0.07543004222719395,
+  "sigma_max": 0.5,
+  "sigma_min": 0.001
+}

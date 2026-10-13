@@ -50,6 +50,7 @@ seeds:
   e9: 1011
   e10: 1012
   e11: 1013
+  e10_grating: 1014
 
 sweeps:
   # PLAN.md section 2.2 "Sweep range" column
@@ -161,3 +162,25 @@ experiments:
   e10:
     darken: 0.12                      # scale brightness to ~10-15%
     n_frames: 50                      # averaged binary frames, approach A
+    sensor_noise: 0.005               # mild Gaussian noise on V after darkening
+    images: data/picture              # every image in this folder is processed
+    sigma_min: 0.001
+    sigma_max: 0.5
+    n_sigma: 24
+    gamma: 0.45                       # PLAN.md 6 gives 0.4 to 0.5
+  e10_frames:
+    frames: [10, 25, 50, 100, 200, 400]  # grain against N at each image's best sigma
+  e10_denoise:
+    passes: 5                         # SR then TV, repeated on its own output
+  e10_grating:
+    # E10's foundation, E2 in two dimensions: a sub-threshold grating instead of a sine in time.
+    N: 128                            # N x N pixels
+    k: [16, 8]                        # cycles across x and y, a whole number each
+    A: 0.7                            # same A and theta as E2
+    theta: 1.0
+    n_frames: 32                      # averaged binary frames, like E2's trials
+    sigma_min: 0.05
+    sigma_max: 3.0
+    n_sigma: 40
+    n_side: 6                         # background window clear of DC and 2k
+    guard: 1

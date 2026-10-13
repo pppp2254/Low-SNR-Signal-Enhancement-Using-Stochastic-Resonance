@@ -1,0 +1,12 @@
+{
+  "darken": 0.12,
+  "gamma": 0.45,
+  "image": "bab66f002f244c7072ee9f937ec061cca3a2a550",
+  "images": "data/picture",
+  "n_frames": 50,
+  "n_sigma": 24,
+  "seed": 1012,
+  "sensor_noise": 0.005,
+  "sigma_max": 0.5,
+  "sigma_min": 0.001
+}

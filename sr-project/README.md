@@ -33,7 +33,8 @@ Every script writes raw arrays to `results/<name>.npz`, the exact parameters to
 `results/<name>.json`, and the figure to `figures/<name>.png` and `.pdf`.
 A figure can be rebuilt from `results/` without rerunning the simulation.
 
-To regenerate everything from scratch:
+To regenerate everything, in order, then the report numbers and the dashboard
+data (about 45 min from empty; `--fresh` clears the cache first):
 
 ```bash
 python make_all.py
@@ -66,6 +67,7 @@ web/server.ts             Elysia on Bun serves the page and the figures, port 31
 | --- | --- |
 | `e1_regimes` | `experiments/e1_regimes.py` |
 | `e2_threshold` | `experiments/e2_threshold.py` |
+| `e10_grating` | `experiments/e10_grating.py` |
 | `e3_snr_vs_noise` | `experiments/e3_snr_vs_noise.py` |
 | `e3_numerical_checks` | `experiments/e3_snr_vs_noise.py` |
 | `e4_robustness` | `experiments/e4_robustness.py` |
@@ -77,6 +79,9 @@ web/server.ts             Elysia on Bun serves the page and the figures, port 31
 | `e1_every_step` | `experiments/e1_every_step.py` |
 | `e4_hundred_steps`, `e5_hundred_steps` | `experiments/e45_hundred_steps.py` |
 | `e11_audio` | `experiments/e11_audio.py` |
+| `e10_image_grid`, `e10_sr_curve` | `experiments/e10_image.py` |
+| `e10_frames` | `experiments/e10_frames.py` |
+| `e10_denoise`, `e10_denoise_crops` | `experiments/e10_denoise.py` |
 
 Style lives in `src/srlab/plotting.py`, so the figures match each other:
 
@@ -149,24 +154,26 @@ bolded claim against the extracted values. Run it after any experiment reruns.
 
 ## Status
 
-WP0 to WP6 and WP9 done. `signals`, `bistable`, `threshold`, `theory`, `metrics`,
-`sweep` and `plotting` are implemented and tested (44 tests). E1, E2 and E3
+WP0 to WP7, WP9 and WP10 done (WP7 approach A only). `signals`, `bistable`, `threshold`, `theory`, `metrics`,
+`sweep`, `image_sr` and `plotting` are implemented and tested (62 tests). E1, E2 and E3
 have run; E3 puts the SNR peak at D = 0.1153 against a theoretical 0.125, and
 the halved-step and Heun checks agree to within 0.7 dB. E4 confirms that the
 optimal D rises with f0. E5 does not reproduce its tuning optimum, and found
 that PLAN.md 2.5's a = 8 D_in is a D-sweep condition misapplied to an a sweep;
 the correct stationary point is a = 4 D_in. E6 and E7 answer the detection
 criterion: a linear band-pass beats every nonlinear method by 13.6 dB, while
-adding noise is still worth +8.41 dB to the bistable system, and the threshold
+adding noise is still worth +8.40 dB to the bistable system, and the threshold
 detector goes from chance to perfect to chance as noise alone is increased.
 
-The report is in `report/report.md`, slides in `report/slides.md`, and
+The report is in `report/report.md`, a Thai report limited to the proposal's
+scope (1-D SR and the low-light image extension) in `report/proposal_report.md`,
+slides in `report/slides.md`, and
 `notebooks/demo.ipynb` runs in about 35 s.
 
-Not started: WP7 (E10 images, `image_sr`
-is still a stub), WP8 (the live simulator) and WP10 (clean-environment
-reproduction). `image_sr` is a docstring stub. See `PROGRESS.md` for open
-issues, including an unverified theory prefactor.
+Not started: WP7 approach B (paper not accessible) and WP8 (the live simulator).
+WP10 reproduced every result in a fresh virtual environment in about 45 min;
+see `PROGRESS.md` for that log and for open issues, including an unverified
+theory prefactor.
 
 ## Dashboard
 

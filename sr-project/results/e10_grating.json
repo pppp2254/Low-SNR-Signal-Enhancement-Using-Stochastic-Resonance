@@ -1,0 +1,16 @@
+{
+  "A": 0.7,
+  "N": 128,
+  "guard": 1,
+  "k": [
+    16,
+    8
+  ],
+  "n_frames": 32,
+  "n_side": 6,
+  "n_sigma": 40,
+  "seed": 1014,
+  "sigma_max": 3.0,
+  "sigma_min": 0.05,
+  "theta": 1.0
+}

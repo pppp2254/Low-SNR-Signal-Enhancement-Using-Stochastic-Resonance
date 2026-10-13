@@ -211,7 +211,7 @@ def rows_e7():
 
 
 def check_report(flat):
-    """Every bolded value in report.md must appear in the extracted set.
+    """Every bolded value in report.md and proposal_report.md must appear in the extracted set.
 
     PLAN.md WP9 requires every number in the text to come from results/. Bold
     is the convention this report uses for measured values, so this catches a
@@ -219,25 +219,25 @@ def check_report(flat):
     """
     import re
 
-    src = ROOT / "report" / "report.md"
-    if not src.exists():
-        return
     haystack = " | ".join(flat.values())
-    missing = []
-    for claim in re.findall(r"\*\*([^*]+)\*\*", src.read_text()):
-        claim = claim.strip()
-        if not re.search(r"\d", claim):
+    for src in (ROOT / "report" / "report.md", ROOT / "report" / "proposal_report.md"):
+        if not src.exists():
             continue
-        # Compare on the numeric tokens, so wording may differ from the table.
-        nums = re.findall(r"-?\d+\.?\d*", claim)
-        if not all(n in haystack for n in nums):
-            missing.append(claim)
-    if missing:
-        print(f"  [check] {len(missing)} bolded claim(s) not found in results:")
-        for c in missing:
-            print(f"      {c}")
-    else:
-        print("  [check] every bolded claim in report.md traces to results/")
+        missing = []
+        for claim in re.findall(r"\*\*([^*]+)\*\*", src.read_text()):
+            claim = claim.strip()
+            if not re.search(r"\d", claim):
+                continue
+            # Compare on the numeric tokens, so wording may differ from the table.
+            nums = re.findall(r"-?\d+\.?\d*", claim)
+            if not all(n in haystack for n in nums):
+                missing.append(claim)
+        if missing:
+            print(f"  [check] {len(missing)} bolded claim(s) in {src.name} not found in results:")
+            for c in missing:
+                print(f"      {c}")
+        else:
+            print(f"  [check] every bolded claim in {src.name} traces to results/")
 
 
 def rows_e8(cfg):
@@ -283,6 +283,190 @@ def rows_e9(cfg):
     return out
 
 
+def rows_e10():
+    p = ROOT / "results" / "e10_metrics.csv"
+    if not p.exists():
+        return []
+    import csv
+
+    with p.open() as fh:
+        rows = list(csv.DictReader(fh))
+    out, peaks, psnr_sr, psnr_clahe, slopes, dev = [], [], [], [], [], []
+    lose = beat_dark = clahe_best = dark_nmax = base_nmax = base_limit = 0
+    images = list(dict.fromkeys(r["image"] for r in rows))
+    for img in images:
+        ssim = {r["method"]: float(r["ssim"]) for r in rows if r["image"] == img}
+        psnr = {r["method"]: float(r["psnr_db"]) for r in rows if r["image"] == img}
+        sr = next(k for k in ssim if k.startswith("SR"))
+        base = max((k for k in ssim if k not in (sr, "dark input")), key=ssim.get)
+        best_p = max(psnr, key=psnr.get)
+        lose += ssim[base] > ssim[sr]
+        beat_dark += ssim[sr] > ssim["dark input"]
+        clahe_best += best_p == "CLAHE"
+        psnr_sr.append(psnr[sr])
+        psnr_clahe.append(psnr["CLAHE"])
+        out.append((f"E10 SSIM on {img}", "; ".join(f"{k}: {v:.3f}" for k, v in ssim.items()),
+                    "results/e10_metrics.csv"))
+        out.append((f"E10 best PSNR on {img}", f"{best_p} {psnr[best_p]:.2f} dB, "
+                    f"SR {psnr[sr]:.2f} dB", "results/e10_metrics.csv"))
+        v = load(f"e10_{img.rsplit('.', 1)[0]}")
+        if v is not None:
+            sg, s = v["sigma"], v["ssim"]
+            k = int(np.argmax(s))
+            peaks.append(sg[k])
+            out.append((f"E10 SR resonance on {img}",
+                         f"SSIM {s[0]:.3f} at sigma {sg[0]:.3f} -> {s[k]:.3f} at "
+                         f"{sg[k]:.3f} -> {s[-1]:.3f} at {sg[-1]:.1f}",
+                         f"results/e10_{img.rsplit('.', 1)[0]}.npz"))
+        fr = load(f"e10_frames_{img.rsplit('.', 1)[0]}")
+        if fr is not None:
+            slopes.append(np.polyfit(np.log(fr["n"]), np.log(fr["grain"]), 1)[0])
+            dev.append(np.abs(fr["grain"] / fr["theory"] - 1).max())
+            dark_nmax += fr["ssim"][-1] > ssim["dark input"]
+            base_nmax += fr["ssim"][-1] > ssim[base]
+            base_limit += fr["ssim_limit"] > ssim[base]
+            out.append((f"E10 SR SSIM against frame count on {img}",
+                        "; ".join(f"N {m}: {x:.3f}" for m, x in zip(fr["n"], fr["ssim"]))
+                        + f"; limit {float(fr['ssim_limit']):.3f}",
+                        f"results/e10_frames_{img.rsplit('.', 1)[0]}.npz"))
+    n = len(images)
+    out += [
+        ("E10 images where the best baseline beats SR by SSIM", f"{lose} of {n}", "derived"),
+        ("E10 images where SR beats the untouched dark input", f"{beat_dark} of {n}",
+         "derived"),
+        ("E10 images where CLAHE has the best PSNR", f"{clahe_best} of {n}", "derived"),
+        ("E10 CLAHE PSNR range", f"{min(psnr_clahe):.2f} to {max(psnr_clahe):.2f} dB",
+         "derived"),
+        ("E10 SR PSNR range", f"{min(psnr_sr):.2f} to {max(psnr_sr):.2f} dB", "derived"),
+    ]
+    if peaks:
+        out.append(("E10 SR peak sigma range", f"{min(peaks):.3f} to {max(peaks):.3f}",
+                    "derived"))
+    if slopes:
+        out += [
+            ("E10 grain slope against N", f"{min(slopes):.3f} to {max(slopes):.3f}", "derived"),
+            ("E10 grain, largest deviation from sqrt(mean p(1-p) / N)",
+             f"{100 * max(dev):.1f} %", "derived"),
+            ("E10 images where SR at the largest N beats the dark input", f"{dark_nmax} of {n}",
+             "derived"),
+            ("E10 images where SR at the largest N beats the best baseline",
+             f"{base_nmax} of {n}", "derived"),
+            ("E10 images where SR's N -> infinity limit beats the best baseline",
+             f"{base_limit} of {n}", "derived"),
+        ]
+    return out
+
+
+def rows_e10_denoise(cfg):
+    gamma = cfg["experiments"]["e10"]["gamma"]
+    passes = cfg["experiments"]["e10_denoise"]["passes"]
+    raw = ("histogram eq", "CLAHE", f"gamma {gamma}")
+    out, curves, beat_raw, base_wins, p2_wins, hurt = [], {"median": [], "max": []}, 0, 0, 0, 0
+    imgs = sorted(p.stem[len("e10_denoise_"):] for p in (ROOT / "results").glob("e10_denoise_*.npz"))
+    for img in imgs:
+        v = load(f"e10_denoise_{img}")
+        sc = {str(n): (s, m) for n, s, m in zip(v["names"], v["ssim"], v["mean"])}
+
+        def best(names):
+            return max(names, key=lambda n: sc[n][0])
+        sr_dn = best(["SR then TV", "SR then NLM"])
+        sr_p = best([f"pass {i}, theta median" for i in range(1, passes + 1)])
+        b = best(raw)
+        b_dn = best([n for n in sc if " then " in n and not n.startswith(("SR", "pass"))])
+        out.append((f"E10 denoise on {img}",
+                    f"SR {sc['SR'][0]:.3f}; {sr_dn} {sc[sr_dn][0]:.3f}; {sr_p} {sc[sr_p][0]:.3f}; "
+                    f"{b} {sc[b][0]:.3f}; {b_dn} {sc[b_dn][0]:.3f}",
+                    f"results/e10_denoise_{img}.npz"))
+        out.append((f"E10 denoise mean brightness on {img}",
+                    f"original {float(v['v_mean']):.3f}; SR then TV {sc['SR then TV'][1]:.3f}; "
+                    f"pass 2, theta median {sc['pass 2, theta median'][1]:.3f}; "
+                    f"{b_dn} {sc[b_dn][1]:.3f}", f"results/e10_denoise_{img}.npz"))
+        beat_raw += sc[sr_dn][0] > sc[b][0]
+        base_wins += sc[b_dn][0] > max(sc[sr_dn][0], sc[sr_p][0], sc["SR"][0])
+        p2_wins += sc["pass 2, theta median"][0] > sc["pass 1, theta median"][0]
+        hurt += sc[sr_dn][0] < sc["SR"][0]
+        for mode in curves:
+            curves[mode].append([(sc[f"pass {i}, theta {mode}"][0],
+                                  sc[f"pass {i}, theta {mode}"][1] / float(v["v_mean"]))
+                                 for i in range(1, passes + 1)])
+    if not imgs:
+        return []
+    n = len(imgs)
+    out += [
+        ("E10 denoise: images where denoised SR beats the best undenoised baseline",
+         f"{beat_raw} of {n}", "derived"),
+        ("E10 denoise: images where denoising lowers SR's SSIM", f"{hurt} of {n}", "derived"),
+        ("E10 denoise: images where the best denoised baseline beats every SR variant",
+         f"{base_wins} of {n}", "derived"),
+        ("E10 denoise: images where pass 2 at the median beats pass 1", f"{p2_wins} of {n}",
+         "derived"),
+    ]
+    for mode, c in curves.items():
+        c = np.array(c).mean(axis=0)
+        out.append((f"E10 denoise: repeated passes, theta at {mode}, mean over images",
+                    "; ".join(f"pass {i + 1}: SSIM {s:.3f}, brightness {b:.2f}x"
+                              for i, (s, b) in enumerate(c)), "derived"))
+    return out
+
+
+def rows_e10_grating():
+    v = load("e10_grating")
+    if v is None:
+        return []
+    sg, snr, th = v["sigma"], v["snr"], v["theory"]
+    k, kt = int(np.argmax(snr)), int(np.argmax(th))
+    vis = th > 0
+    return [
+        ("E10 grating sigma values at the -30 dB floor", f"{int((snr <= -30).sum())}", "results/e10_grating.npz"),
+        ("E10 grating peak", f"{snr[k]:.2f} dB at sigma = {sg[k]:.3f}", "results/e10_grating.npz"),
+        ("E10 grating theory peak", f"{th[kt]:.2f} dB at sigma = {sg[kt]:.3f}", "results/e10_grating.npz"),
+        ("E10 grating SNR at the largest sigma", f"{snr[-1]:.2f} dB at sigma = {sg[-1]:.1f}",
+         "results/e10_grating.npz"),
+        ("E10 grating largest gap to theory where theory is above 0 dB",
+         f"{np.abs(snr - th)[vis].max():.2f} dB over {int(vis.sum())} sigma values", "derived"),
+    ]
+
+
+def rows_e11(cfg):
+    v = load("e11")
+    if v is None:
+        return []
+    units = cfg["experiments"]["e11"]["units"]
+    sg, lin = v["sigma"], v["linear"]
+    out = []
+    for N in units:
+        f = v[f"thr_{N}"]
+        k = int(np.argmax(f))
+        out.append((f"E11 threshold array peak fidelity, {N} unit{'s' if N > 1 else ''}",
+                    f"{f[k]:.2f} dB at sigma = {sg[k]:.2f}", "results/e11.npz"))
+    f = v[f"thr_{max(units)}"]
+    k = int(np.argmax(f))
+    D, bf = v["D"], v["bistable"]
+    kb = 1 + int(np.argmax(bf[1:]))
+    tD, ts, tf = v["tone_D"], v["tone_snr"], v["tone_fid"]
+    kt = int(np.argmax(ts))
+    out += [
+        ("E11 threshold fidelity at the lowest sigma",
+         f"{max(v[f'thr_{N}'][0] for N in units):.2f} dB at sigma = {sg[0]:.2f}",
+         "results/e11.npz"),
+        ("E11 linear sensor at the array's peak sigma",
+         f"{lin[k]:.2f} dB, {lin[k] - f[k]:+.2f} dB over the array", "derived"),
+        ("E11 smallest linear margin over the array", f"{(lin - f).min():+.2f} dB",
+         "derived"),
+        ("E11 dominant frequency", f"{float(v['f_dom']):.1f} Hz", "results/e11.npz"),
+        ("E11 solver steps per audio sample", f"{int(v['steps'])}", "results/e11.npz"),
+        ("E11 bistable fidelity with no noise", f"{bf[0]:.2f} dB", "results/e11.npz"),
+        ("E11 bistable best fidelity with noise", f"{bf[kb]:.2f} dB at D = {D[kb]:g}",
+         "results/e11.npz"),
+        ("E11 pure tone peak SNR", f"{ts[kt]:.2f} dB at D = {tD[kt]:g}", "results/e11.npz"),
+        ("E11 pure tone SNR at the lowest and highest D", f"{ts[0]:.2f} and {ts[-1]:.2f} dB",
+         "results/e11.npz"),
+        ("E11 pure tone fidelity range", f"{tf.min():.2f} to {tf.max():.2f} dB",
+         "results/e11.npz"),
+    ]
+    return out
+
+
 def main():
     cfg = load_config()
     groups = [
@@ -296,6 +480,10 @@ def main():
         ("E7 baselines", rows_e7()),
         ("E8 aperiodic input", rows_e8(cfg)),
         ("E9 residence times", rows_e9(cfg)),
+        ("E10 foundation: two-dimensional grating", rows_e10_grating()),
+        ("E10 low-light images", rows_e10()),
+        ("E10 denoising afterwards", rows_e10_denoise(cfg)),
+        ("E11 sound", rows_e11(cfg)),
     ]
     lines = ["# Numbers cited in the report", "",
              "Generated by `report/extract_numbers.py` from `results/`. Do not edit by hand.",

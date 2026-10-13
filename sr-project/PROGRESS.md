@@ -651,3 +651,252 @@ D = 0.15 and the bump is shallow, so the text now says what was measured.
 4. `results/audio/` holds eight WAVs of about 94 KB each; decide whether they
    belong in git.
 5. E11 is not in `report/report.md` or the Thai report doc yet.
+
+## 2026-09-30 - WP7: low-light images (E10), approach A only
+
+**Done.** `src/srlab/image_sr.py` (`darken`, `approach_a`, `baselines`,
+`image_metrics`), `experiments/e10_image.py`, `tests/test_image_sr.py` (4
+tests), config `experiments.e10`. Processes every image in `data/picture/`
+(five supplied by the user) or paths on the command line. Outputs
+`figures/e10_image_grid`, `figures/e10_sr_curve`, `results/e10_metrics.csv`.
+
+Method. V of HSV only. Each image is the ground truth, darkened to 12 %, given
+Gaussian sensor noise 0.005 and quantised to 8 bits; at that scale the whole
+image fits in about 30 grey levels. Approach A thresholds at the dark image's
+maximum, so with no noise no pixel fires (E2's sub-threshold setup in 2-D),
+averages 50 noisy binary frames, and stretches the result linearly to [0, 1].
+Baselines: histogram equalisation, CLAHE, gamma 0.45.
+
+**Results, SSIM against the original:**
+
+| image | dark input | HE | CLAHE | gamma 0.45 | SR best |
+| --- | --- | --- | --- | --- | --- |
+| HomuMado.jpeg (illustration) | 0.170 | 0.301 | 0.552 | **0.561** | 0.210 |
+| badapple.png (binary silhouette) | **0.470** | 0.111 | 0.371 | 0.380 | 0.454 |
+| black white river.jpeg (photo) | 0.198 | 0.258 | 0.434 | **0.659** | 0.141 |
+| gradiant.jpeg (colour ramps) | 0.222 | 0.305 | 0.421 | **0.593** | 0.127 |
+| images.jpeg (rings pattern) | 0.067 | 0.801 | **0.907** | 0.529 | 0.645 |
+
+CLAHE has the best PSNR on all five (16.76 to 21.54 dB).
+
+1. **The resonance exists on every image.** SSIM goes from 0.000 (no noise, no
+   pixel fires) to a peak at sigma 0.034 to 0.099 and falls again, e.g.
+   0.000 -> 0.645 -> 0.174 on the rings. Noise is what lets the image through.
+2. **SR never wins overall.** Gamma wins SSIM on three images, CLAHE on the
+   texture-heavy rings and on PSNR everywhere. By SSIM, SR even trails the
+   untouched dark input on three of five; SSIM rewards the dark image for
+   keeping structure, while PSNR (2.8 to 8.1 dB for the dark input) shows SR
+   does brighten every image.
+3. **SR's one win is the binary silhouette**, where it beats all three
+   baselines (0.454 against 0.380 at best). Thresholding suits content that is
+   already two-level.
+4. **Why SR loses:** 50 binary frames give only 51 grey levels, and binomial
+   grain up to about 0.07, which the stretch amplifies; the grain is visible
+   in the grid. PLAN.md 9 suggests 50 to 100 frames.
+
+This is the "mixed result" PLAN.md 6 anticipated: a real noise-benefit peak,
+but classical tone mapping scores higher.
+
+**Approach B not implemented, as PLAN.md instructs when the paper is not
+accessible.** Chouhan, Jha and Biswas, IET Image Processing 7 (2013) 174-184,
+returned HTTP 403. The same group's open-access APSIPA 2013 paper (Jha,
+Chouhan, Aizawa, Biswas) was reachable, but it is a DCT-domain method, not
+the spatial one PLAN.md names, and the extracted text gave inconsistent
+values (step size both 0.001 and 0.01 to 0.055). Building on either would be
+guessing.
+
+**Correction.** Earlier entries say the Gammaitoni et al. (1998) paper "was
+not reachable". Accurately, no fetch was attempted then; web tools were
+available. The prefactor question is still open.
+
+**Copyright.** `HomuMado.jpeg` is copyrighted anime art and `black white
+river.jpeg` carries a "(c) 2012 Keith Cooper, Northlight Images" watermark;
+`badapple.png` is likely derived from copyrighted material too. The E10 grid
+embeds them. Fine for local testing; do not commit `data/picture/` or the E10
+figures to a public repository. scikit-image's bundled test images
+(`coffee`, `astronaut`, `chelsea`, `camera`) load offline and are a
+publishable substitute.
+
+**Checked.** 4 new tests pass (darkening scale and 8-bit quantisation; no
+output at zero noise; an SSIM optimum exists; baselines keep shape and
+range). Runtime about 60 s for five images, peak RSS 425 MB.
+
+## WP9 update: E10 and E11 in the report
+
+`report.md` section 7 now covers both extensions (7.1 images, 7.2 sound), with
+one added statement in section 8 and one sentence each in the introduction and
+conclusion. `extract_numbers.py` gained `rows_e10` (from
+`results/e10_metrics.csv` and `results/e10_*.npz`) and `rows_e11` (from
+`results/e11.npz`); 110 quantities, and every bolded claim traces. The
+noisy-input sound check is still only in scratch, so the report names it
+behind a TODO without quoting its numbers.
+
+## E10 rerun: consent art, memory fix, name-based seeds
+
+`HomuMado.jpeg` was replaced by two illustrations used with the artist's
+permission for this project only, not for AI training (`MabelleMona1.jpg`,
+`MabelleMona2.jpg`); artist credit still to be added to `report.md`.
+
+**Crash.** The first six-image run peaked at 1.45 GB on a 3.8 GB machine; the
+kernel OOM-killed claude-desktop and the machine was rebooted. Two causes:
+`threshold_detector` drew all trials of noise as one float64 block (656 MB for
+the 1.64 Mpx image, plus an equal temporary), and the E10 grid drew every panel
+at full resolution. Fixed by drawing noise one trial at a time from the same
+generator (identical stream; new test compares against the block draw) and by
+drawing a ~800 px display copy in the grid. Sweep peak is now about 400 MB;
+the full run including figures peaks at 790 MB. Heavy runs go under
+`systemd-run --user --scope -p MemoryMax=1200M -p MemorySwapMax=0`.
+
+**Seeds.** E10 seeded each image by its position in the sorted file list, so
+adding an image changed every other image's numbers. Seeds now come from a
+CRC32 of the file name. This moved every E10 number once (for example images
+SR 0.645 to 0.653); a recompute of black white river after the memory fix was
+bit-identical to the run before it, and `e10_metrics.csv` byte-identical.
+
+**Checked.** 57 tests pass (72 s, 342 MB). Every bolded claim in `report.md`
+traces (113 quantities). New counts: best baseline beats SR on 5 of 6 images,
+SR beats the dark input on 2 of 6, CLAHE has the best PSNR on 6 of 6.
+
+## References: proposal bibliography, method sources, image credits
+
+`report.md` now has 28 references, each cited in the text: the proposal's five
+in its own numbering ([1] to [5]; Chouhan et al. and Simonotto et al. were
+missing before), twenty method sources ([6] to [25]: Kramers rate,
+Euler-Maruyama and Heun, bootstrap, ROC, matched filter, noise-aided
+detection, parameter-tuned, aperiodic and array SR, residence times, HSV,
+histogram equalisation, gamma, PSNR, AHE and CLAHE, SSIM, scikit-image,
+frequency rescaling) and three image credits ([26] to [28], including Keith
+Cooper's Hood Canal photograph, matched by watermark and scene). Every DOI was
+checked against Crossref and both ISBNs against OpenLibrary; that confirms the
+citations, not the content. Still open: sources of `gradiant.jpeg` and
+`images.jpeg`, and reading reference 3 for the prefactor.
+
+## E10 frame count: grain falls as 1/sqrt(N)
+
+New `experiments/e10_frames.py`, config block `experiments.e10_frames` (a
+separate block, because adding a key to `e10` would invalidate every E10
+cache). At each image's best sigma from `e10_image.py` it counts firings over
+N = 10 to 400 frames, one frame in memory at a time (the full stack would be
+2.6 GB at N = 400), in two independent runs.
+
+**Result.** Grain slope against N is -0.501 to -0.497 on all six images and
+within 0.8 % of sqrt(mean p(1-p) / N) at every N. Run 1 uses E10's seed, and
+its 50-frame SSIM matches `e10_metrics.csv` to four decimals on every image,
+which checks the counting against `approach_a`. SSIM roughly doubles from 50
+to 400 frames on the photographs and illustrations (river 0.138 to 0.334,
+limit 0.508). At 400 frames SR beats the dark input on 6 of 6 images (2 of 6
+at 50) but the best baseline on only 1 of 6; even the N -> infinity limit, the
+pure sigmoid, beats it on 2 of 6 (badapple, images). So the 50-frame result
+understated SR, but the verdict stands. Sigma was fixed at the 50-frame
+optimum, so the limits are lower bounds. Runtime 72 s, peak 442 MB.
+Report 7.1 has a new paragraph; statement 4 in section 8 notes 400 frames.
+
+## WP10: clean-environment reproduction
+
+New `make_all.py` runs every experiment in order (E1 to E11, then
+`e10_frames`), then `report/extract_numbers.py` and `web/export_data.py`,
+stopping on the first failure. `--fresh` deletes `results/*.json` so every
+simulation reruns. README already pointed to `make_all.py`, which did not exist.
+
+**Run.** The project was copied without `.venv`, `results/`, `figures/`,
+`report/numbers.*`, `web/data.js` and `node_modules`, a fresh venv was made
+with Python 3.12.3, and `pip install -r requirements.txt` then
+`pip install -e .` resolved the same versions as the working venv (numpy
+2.5.3, scipy 1.18.1, matplotlib 3.11.2, scikit-image 0.26.0, opencv-python
+5.0.0.93). `pytest`: 57 passed in 81 s. `make_all.py` under a 1.2 GB cap:
+exit 0, about 43 min in total. The run was stopped once mid-E4 and restarted
+as a detached systemd service so it would survive closing the desktop app; the
+finished steps came from that run's own cache, so every result was still
+computed in the fresh environment. Slowest steps: E3 680 s, E5 358 s,
+E6 360 s, E7 151 s, E10 126 s.
+
+**Mismatches against the committed results.**
+
+1. `report/numbers.md`, `report/numbers.json` and `web/data.js` are
+   byte-identical, so no number in the report or dashboard changes.
+2. Results: 95 of 103 files byte-identical. Eight differ, all SNR-derived
+   (`e1`, `e2`, `e3`, `e3_dt_half`, `e3_heun`, `e5_D0.05`, `e5_D0.1`,
+   `e5_D0.2`), by at most 2.2e-8 relative. Likely cause: those caches predate
+   the removal of the float64 cast in `_band_periodograms` (entry above), which
+   changes rounding at that level; the cache keys on parameters, not code, so
+   they were never rebuilt. Harmless, but a code change can leave a cache
+   stale without warning.
+3. Figures: 15 of 17 PNGs pixel-identical. `e3_numerical_checks` and
+   `e5_parameter_tuned` differ in 34 and 33 pixels (0.001 %), from item 2.
+   PDFs were not compared, as their creation dates always differ.
+4. `results/e10_HomuMado.{npz,json}` exist only in the original: a stale
+   cache of the removed image, safe to delete.
+
+**TODOs left in the report.** Three: the E11 noisy-input check not in
+`results/` (section 7.2), the pi vs pi/2 prefactor against reference 3
+(section 8), and references 1 to 25 not read in full (reference list note).
+
+**Figures not referenced in the report.** `e1_every_step`,
+`e4_hundred_steps` and `e5_hundred_steps`, the step-by-step views, which are
+supplementary and listed in the README only.
+
+**References not cited in the text.** None; all 30 are cited, and no citation
+points past the list.
+
+## E10 denoising afterwards, and repeated passes
+
+Question from review: if SR's grain is the problem, denoise the SR output, and
+does repeating SR make the image brighter? New `experiments/e10_denoise.py`,
+config `experiments.e10_denoise.passes`, and in `srlab.image_sr`:
+`noise_sigma` (blind MAD estimate of diagonal differences), `denoise` (TV or
+NLM from scikit-image, strength from `noise_sigma`, never from the original)
+and `sr_passes` (SR then TV, repeated, threshold at max or median). Four new
+tests: the estimator recovers a known sigma, denoising keeps the mean, pass 1
+equals E10 then TV and max-threshold passes darken, a flat image is left alone.
+Wavelet shrinkage and BM3D were not tried: both need PyWavelets or another new
+dependency, and `skimage.restoration.estimate_sigma` needs PyWavelets too,
+hence the hand-written estimator.
+
+**Bug found on the way.** On the silhouette, over half the pixel differences
+are exactly zero, the estimate was 0 and TV divided by it. `denoise` now
+returns a zero-noise image unchanged; test added.
+
+**Result.** Denoising keeps the mean (river 0.412 before and after) and lifts
+SSIM a lot (river 0.138 to 0.760); denoised SR beats the best undenoised
+baseline on 5 of 6. Repeating at the max threshold darkens every pass (0.59x
+to 0.31x the original brightness, SSIM 0.649 to 0.377, means over images). At
+the median, pass 2 brightens to 0.92x and helps on 4 of 6 (river 0.799), but
+the crops show the tree losing its branches; later passes add nothing. Given
+the same denoisers, before or after, CLAHE reaches 0.926 to 0.945 on four
+images and the best denoised baseline beats every SR variant on 6 of 6. So the
+E10 verdict gets stronger, not weaker: CLAHE was held back by amplified sensor
+noise, not by its tone curve. Runtime about 3 min for six images, peak 661 MB.
+References 31 to 35 added (TV, Chambolle, NLM, Donoho and Johnstone for the
+MAD scaling, the quanta image sensor), DOIs checked against Crossref.
+
+## Proposal-scope report
+
+New `report/proposal_report.md`, in Thai, following the proposal's own
+sections: objectives, method, the three expected outcomes, criteria 4 to 7,
+conclusion, limits and further work. It covers only what the proposal promised:
+1-D SR (E1, E2, E3 with its numerical checks, E4's frequency shift, E8's pulse
+train, E6, E7) and the low-light image extension (E10 approach A). Everything
+beyond the proposal (E5, E9, E11, the frame test, denoising) stays in
+`report.md`. Twenty references: the proposal's five in their own numbering,
+the method sources it uses, and the five image credits.
+`extract_numbers.py`'s claim check now covers both reports; every bolded number
+in each traces to `results/`.
+
+## E12: two-dimensional SR without an image
+
+Asked for a pure 2-D foundation under E10. New `experiments/e12_grating.py`,
+config `experiments.e12`, seed 1014, `metrics.snr2d_db` (the 2-D form of
+`snr_db`: averaged 2-D periodograms, median background in a window around k)
+and `threshold.threshold_snr2d_theory_db` (closed form for independent pixels,
+|sum p e^(-ik.x)|^2 / sum p(1-p)), with one test that checks a blank output
+without noise and agreement within 1 dB with it. E2's A and theta on a
+128 x 128 grating at k = (16, 8), 32 frames, 40 sigma values. Result: blank at
+the 5 smallest sigma, peak 30.51 dB at sigma = 0.690 against theory 30.37 dB at
+the same sigma, within 0.31 dB of theory wherever theory is above 0 dB; near
+the floor only a handful of pixels fire and the estimator cannot resolve it,
+as in E2. Added to both reports before E10 and to `make_all.py` after E2.
+Runtime a few seconds.
+Renamed the same day to sit under E10 as its foundation: `experiments/e10_grating.py`,
+config and seed `e10_grating`, figure and results `e10_grating`. `.gitignore`
+keeps `figures/e10_*` out but lets `figures/e10_grating.*` through, since it holds
+no third-party image. Numbers unchanged on rerun.

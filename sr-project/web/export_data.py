@@ -27,6 +27,8 @@ FIGURES = [
     ("e7_baselines", "E7", "Five detectors on the same low-SNR input"),
     ("e8_pulses", "E8", "Aperiodic pulse train, correlation against noise"),
     ("e9_residence_times", "E9", "Residence times against the drive period"),
+    ("e10_image_grid", "E10", "Low-light images: SR against classical methods"),
+    ("e10_sr_curve", "E10", "Threshold SR on images: SSIM and PSNR against noise"),
     ("e11_audio", "E11", "Stochastic resonance on sound"),
 ]
 

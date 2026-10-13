@@ -61,7 +61,7 @@ def two_state_snr(a, b, A, D):
     the baseline is not adiabatic (W = 0.063 against 2 r_K = 0.061 at D = 0.125).
 
     Prefactor unverified. PLAN.md asks for a check against Gammaitoni et al.
-    (1998); the paper was unreachable here, so no equation number is cited.
+    (1998); the paper has not been consulted yet, so no equation number is cited.
     An independent derivation gives pi/2, a factor of 2 below this, which is a
     one-sided vs two-sided spectrum convention: 3 dB vertical, peak unmoved.
     PLAN.md's pi is used so the project matches its own spec. See PROGRESS.md.

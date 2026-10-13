@@ -6,3 +6,9 @@ __pycache__/
 
 # dashboard deps
 web/node_modules/
+
+# third-party test images, study use only, not for redistribution or AI training
+data/picture/
+figures/e10_*
+# synthetic grating, no third-party image
+!figures/e10_grating.*
